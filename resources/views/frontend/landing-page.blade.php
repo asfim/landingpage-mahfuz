@@ -256,6 +256,20 @@
       
       .wa-sticky { bottom: 16px !important; right: 16px !important; padding: 8px 16px !important; font-size: 0.9rem !important; }
     }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%,60% { transform: translateX(-6px); }
+      40%,80% { transform: translateX(6px); }
+    }
+    .variant-btn.btn-dark {
+      background-color: #b33e0f !important;
+      border-color: #b33e0f !important;
+      color: #fff !important;
+    }
+    .variant-btn:hover {
+      border-color: #b33e0f;
+      color: #b33e0f;
+    }
   </style>
   {!! $landingPage->header_script ?? '' !!}
 </head>
@@ -263,21 +277,51 @@
 {!! $landingPage->body_script ?? '' !!}
 
 @php
-  $oldPrice = $landingPage->old_price ?? ($product->price * 1.5);
-  $newPrice = $landingPage->new_price ?? $product->price;
-  $insideCharge = $landingPage->inside_dhaka_charge ?? 60;
-  $outsideCharge = $landingPage->outside_dhaka_charge ?? 120;
-  $sizes = [];
+  // Price — prefer landing page price; fallback to product price or first variant price
+  $firstVariantPriceFallback = 0;
   if (!empty($product->variants)) {
-      foreach ($product->variants as $variant) {
-          if (strtolower($variant['label'] ?? '') === 'size') {
-              $sizes[] = $variant['value'];
+      foreach ($product->variants as $v) {
+          if (!empty($v['active']) && isset($v['price']) && (float)$v['price'] > 0) {
+              $firstVariantPriceFallback = (float)$v['price'];
+              break;
           }
       }
   }
-  if (empty($sizes)) {
-      $sizes = ['S', 'M', 'L', 'XL', '2XL'];
+  $effectiveProductPrice = $product->price > 0 ? $product->price : $firstVariantPriceFallback;
+  $oldPrice = $landingPage->old_price > 0 ? $landingPage->old_price : ($effectiveProductPrice * 1.5);
+  $newPrice = $landingPage->new_price > 0 ? $landingPage->new_price : $effectiveProductPrice;
+  $insideCharge = $landingPage->inside_dhaka_charge ?? 60;
+  $outsideCharge = $landingPage->outside_dhaka_charge ?? 120;
+
+  // Parse product variants (new combo structure)
+  $productVariants = [];
+  $variantAttributes = []; // e.g. ['size' => ['m','xl'], 'color' => ['red','blue']]
+  if (!empty($product->variants)) {
+      $lpVariantPrices = $landingPage->variant_prices ?? [];
+      foreach ($product->variants as $variant) {
+          if (empty($variant['active'])) continue;
+          if (!empty($variant['combo']) && is_array($variant['combo'])) {
+              foreach ($variant['combo'] as $attrKey => $attrVal) {
+                  if (!in_array($attrVal, $variantAttributes[$attrKey] ?? [])) {
+                      $variantAttributes[$attrKey][] = $attrVal;
+                  }
+              }
+          }
+          // Inject custom variant price from Landing Page if available
+          $sku = $variant['sku'] ?? null;
+          if ($sku && !empty($lpVariantPrices)) {
+              $customPricing = collect($lpVariantPrices)->firstWhere('sku', $sku);
+              if ($customPricing && !empty($customPricing['price'])) {
+                  $variant['price'] = (float) $customPricing['price'];
+              }
+              if ($customPricing && !empty($customPricing['old_price'])) {
+                  $variant['old_price'] = (float) $customPricing['old_price'];
+              }
+          }
+          $productVariants[] = $variant;
+      }
   }
+  $hasVariants = !empty($productVariants) && !empty($variantAttributes);
 @endphp
 
 <!-- ======== HERO 1 ======== -->
@@ -303,7 +347,14 @@
       </div>
       <div class="col-lg-6 text-center" data-aos="fade-left" data-aos-duration="1000" data-aos-delay="150">
         @php
-          $heroImage = $landingPage->image ? asset('storage/' . $landingPage->image) : ($product->image ? asset('storage/' . $product->image) : 'https://placehold.co/400x400/eee/aaa?text=No+Img');
+          $heroImage = 'https://placehold.co/400x400/eee/aaa?text=No+Img';
+          if ($hasVariants && !empty($productVariants[0]['image'])) {
+              $heroImage = asset('storage/' . $productVariants[0]['image']);
+          } elseif ($landingPage->image) {
+              $heroImage = asset('storage/' . $landingPage->image);
+          } elseif ($product->image) {
+              $heroImage = asset('storage/' . $product->image);
+          }
         @endphp
         <img src="{{ $heroImage }}" alt="{{ $product->name }}" class="img-fluid img-soft-rounded floating-soft" style="max-height:420px; width:auto; object-fit: cover;">
       </div>
@@ -328,6 +379,46 @@
   </div>
 </section>
 
+@if($hasVariants)
+<!-- ======== VARIANT SHOWCASE ======== -->
+<section id="variants" class="py-5 bg-light">
+  <div class="container">
+    <div class="text-center mb-5" data-aos="fade-up">
+      <h2 class="fw-bold" style="color:var(--primary-color);">আপনার পছন্দের ভ্যারিয়েন্টটি বেছে নিন</h2>
+      <p class="text-muted">স্টক ফুরিয়ে যাওয়ার আগেই অর্ডার করুন!</p>
+    </div>
+    
+    <div class="row g-4 justify-content-center">
+      @foreach($productVariants as $idx => $variant)
+        @php
+          $sku = $variant['sku'] ?? 'v-'.$idx;
+          $comboLabel = implode(', ', array_map(fn($k,$v) => strtoupper($k).': '.strtoupper($v), array_keys($variant['combo'] ?? []), array_values($variant['combo'] ?? [])));
+          $vPrice = !empty($variant['price']) && $variant['price'] > 0 ? $variant['price'] : $effectiveProductPrice;
+          $vOldPrice = !empty($variant['old_price']) && $variant['old_price'] > 0 ? $variant['old_price'] : ($vPrice * 1.5);
+          $vImage = !empty($variant['image']) ? asset('storage/'.$variant['image']) : 'https://placehold.co/400x400/eee/aaa?text=No+Img';
+        @endphp
+        <div class="col-12 col-sm-6 col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="{{ $idx * 50 }}">
+          <div class="card h-100 border-0 shadow-sm variant-card" style="border-radius:15px; overflow:hidden; transition:transform 0.3s ease;">
+            <div style="position:relative; padding-top:100%;">
+              <img src="{{ $vImage }}" alt="{{ $comboLabel }}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;">
+            </div>
+            <div class="card-body text-center p-4">
+              <h5 class="card-title fw-bold mb-2">{{ $comboLabel }}</h5>
+              <div class="price-section mb-3">
+                <span class="text-muted text-decoration-line-through small me-2">৳{{ number_format($vOldPrice, 0, '.', '') }}</span>
+                <span class="fw-bold fs-5 text-accent">৳{{ number_format($vPrice, 0, '.', '') }}</span>
+              </div>
+              <button type="button" class="btn btn-accent w-100 py-2 fw-semibold order-variant-btn" data-sku="{{ $sku }}" onclick="selectVariantAndScroll('{{ $sku }}')">
+                <i class="fas fa-shopping-cart me-1"></i> অর্ডার করুন
+              </button>
+            </div>
+          </div>
+        </div>
+      @endforeach
+    </div>
+  </div>
+</section>
+@else
 <!-- ======== PRICE SHOWCASE with BULK QUANTITY ======== -->
 <section class="py-4">
   <div class="container">
@@ -373,6 +464,7 @@
     </div>
   </div>
 </section>
+@endif
 
 <!-- ======== 5 PRODUCT FEATURES (GRID) ======== -->
 @if(!empty($landingPage->features))
@@ -428,7 +520,45 @@
                 <div class="card border-0 shadow-sm bg-light" style="border-radius: 24px;">
                   <div class="card-body p-4">
                     <h5 class="fw-bold mb-3 border-bottom pb-2">অর্ডার সামারি</h5>
-                    
+
+                    @if($hasVariants)
+                    {{-- Selected Variant Display / Dropdown --}}
+                    <div class="mb-4">
+                      <label class="form-label fw-semibold">আপনার পছন্দের ভ্যারিয়েন্ট <span class="text-danger">*</span></label>
+                      <input type="hidden" name="variant_sku" id="selectedVariantSku" value="">
+                      <div class="dropdown w-100">
+                        <button class="btn btn-outline-secondary w-100 text-start d-flex align-items-center justify-content-between p-2" type="button" id="variantDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius:12px; border-color:#cbd5e1; background:#fff;">
+                          <div class="d-flex align-items-center gap-3" id="variantDropdownSelected">
+                            <div style="width:40px; height:40px; background:#f1f5f9; border-radius:8px; display:flex; align-items:center; justify-content:center;">
+                              <i class="fas fa-box-open text-muted"></i>
+                            </div>
+                            <span class="text-muted fw-semibold">ভ্যারিয়েন্ট নির্বাচন করুন</span>
+                          </div>
+                          <i class="fas fa-chevron-down text-muted"></i>
+                        </button>
+                        <ul class="dropdown-menu w-100 shadow-lg border-0 mt-1 p-2" aria-labelledby="variantDropdownBtn" style="border-radius:16px; max-height:300px; overflow-y:auto;">
+                          @foreach($productVariants as $idx => $variant)
+                            @php
+                              $sku = $variant['sku'] ?? 'v-'.$idx;
+                              $comboLabel = implode(', ', array_map(fn($k,$v) => strtoupper($k).': '.strtoupper($v), array_keys($variant['combo'] ?? []), array_values($variant['combo'] ?? [])));
+                              $vPrice = !empty($variant['price']) && $variant['price'] > 0 ? $variant['price'] : $effectiveProductPrice;
+                              $vImage = !empty($variant['image']) ? asset('storage/'.$variant['image']) : 'https://placehold.co/400x400/eee/aaa?text=No+Img';
+                            @endphp
+                            <li>
+                              <a class="dropdown-item d-flex align-items-center gap-3 p-2 rounded variant-dropdown-item" href="#" data-sku="{{ $sku }}" data-price="{{ $vPrice }}" data-img="{{ $vImage }}" data-label="{{ $comboLabel }}" style="transition:background 0.2s;">
+                                <img src="{{ $vImage }}" alt="{{ $comboLabel }}" style="width:40px; height:40px; object-fit:cover; border-radius:8px;">
+                                <div class="flex-grow-1">
+                                  <div class="fw-bold">{{ $comboLabel }}</div>
+                                  <div class="text-accent fw-semibold small">৳{{ number_format($vPrice, 0, '.', '') }}</div>
+                                </div>
+                              </a>
+                            </li>
+                          @endforeach
+                        </ul>
+                      </div>
+                    </div>
+                    @endif
+
                     <div class="mb-3">
                       <label class="form-label fw-semibold">পরিমাণ (Quantity)</label>
                       <div class="input-group">
@@ -523,14 +653,22 @@
 </div>
 @endif
 
+{{-- Variant data for JavaScript --}}
+@if($hasVariants)
+<script id="variantData" type="application/json">
+  @json($productVariants)
+</script>
+@endif
+
 <!-- ======== SCRIPTS ======== -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 <script>
   AOS.init({ once: true, duration: 900, easing: 'ease-out-quad' });
 
   // ----- FORM & PRICING LOGIC -----
   (function(){
-    const basePrice = {{ $newPrice }};
+    let basePrice = {{ $newPrice }};
     const baseOldPrice = {{ $oldPrice }};
     const insideCharge = {{ $insideCharge }};
     const outsideCharge = {{ $outsideCharge }};
@@ -630,6 +768,76 @@
     // Initialize UI
     updateUI();
 
+    // ===== VARIANT LOGIC =====
+    const variantDataEl = document.getElementById('variantData');
+    const allVariants = variantDataEl ? JSON.parse(variantDataEl.textContent) : [];
+    const selectedVariantCombo = {}; // tracks user selection per attribute
+    let activeVariant = null;
+
+    function findMatchingVariant(sku) {
+      if (!allVariants.length) return null;
+      return allVariants.find(v => v.sku === sku) || null;
+    }
+
+    function updateVariantState(sku) {
+      activeVariant = findMatchingVariant(sku);
+      // Update price if variant has its own price
+      if (activeVariant && activeVariant.price != null && activeVariant.price > 0) {
+        basePrice = parseFloat(activeVariant.price);
+        baseOldPrice = (activeVariant.old_price != null && activeVariant.old_price > 0) ? parseFloat(activeVariant.old_price) : (basePrice * 1.5);
+      } else {
+        basePrice = {{ $newPrice }};
+        baseOldPrice = {{ $oldPrice }};
+      }
+      // Update variant image preview
+      const imgPreview = document.getElementById('variantImagePreview');
+      const varImg = document.getElementById('variantImg');
+      if (imgPreview && varImg && activeVariant && activeVariant.image) {
+        varImg.src = '/storage/' + activeVariant.image;
+        imgPreview.classList.remove('d-none');
+      } else if (imgPreview) {
+        imgPreview.classList.add('d-none');
+      }
+      updateUI();
+    }
+
+
+
+    // Dropdown Variant Selection
+    document.querySelectorAll('.variant-dropdown-item').forEach(function(item) {
+      item.addEventListener('click', function(e) {
+        e.preventDefault();
+        const sku = this.dataset.sku;
+        const price = this.dataset.price;
+        const img = this.dataset.img;
+        const label = this.dataset.label;
+
+        // Update hidden input
+        document.getElementById('selectedVariantSku').value = sku;
+        
+        // Update Dropdown UI
+        document.getElementById('variantDropdownSelected').innerHTML = `
+          <img src="${img}" style="width:40px; height:40px; object-fit:cover; border-radius:8px;">
+          <div>
+            <div class="fw-bold" style="color:#0f172a; line-height:1.2;">${label}</div>
+            <div class="text-accent small fw-semibold" style="line-height:1.2;">৳${totalPriceFormat(price)}</div>
+          </div>
+        `;
+        
+        // Update Variant State and Price
+        updateVariantState(sku);
+      });
+    });
+
+    // Function to select variant from Showcase and scroll to form
+    window.selectVariantAndScroll = function(sku) {
+      const dropdownItem = document.querySelector(`.variant-dropdown-item[data-sku="${sku}"]`);
+      if (dropdownItem) {
+        dropdownItem.click();
+      }
+      document.getElementById('order').scrollIntoView({ behavior: 'smooth' });
+    };
+
     // ORDER SUBMIT
     document.getElementById("orderForm").addEventListener("submit", function(e) {
       e.preventDefault();
@@ -641,7 +849,6 @@
       
       // prepend +88 if not already there
       if (!phone.startsWith('+88')) {
-        // if user typed 88017..., just add +
         if (phone.startsWith('880')) {
           phone = '+' + phone;
         } else {
@@ -649,10 +856,32 @@
         }
       }
       
-      // Default variant block if it was required
-      const sizeSelect = document.querySelector('select[name="size"]');
-      const size = sizeSelect ? sizeSelect.value : '';
-      let variants = size ? { size: size } : {};
+      // Build variants from selectedVariantSku
+      let variants = {};
+      if (allVariants.length) {
+        const sku = document.getElementById('selectedVariantSku').value;
+        if (!sku) {
+          alert('অনুগ্রহ করে আপনার পছন্দের ভ্যারিয়েন্ট বেছে নিন।');
+          
+          // Highlight dropdown
+          const dropdownBtn = document.getElementById('variantDropdownBtn');
+          if (dropdownBtn) {
+            dropdownBtn.style.animation = 'shake 0.4s ease';
+            dropdownBtn.style.borderColor = 'red';
+            setTimeout(() => {
+              dropdownBtn.style.animation = '';
+              dropdownBtn.style.borderColor = '#cbd5e1';
+            }, 1000);
+          }
+          
+          return;
+        }
+        
+        if (activeVariant && activeVariant.sku) {
+          variants = Object.assign({}, activeVariant.combo);
+          variants._sku = activeVariant.sku;
+        }
+      }
 
       if (!name || !phone || !address) {
         alert("দয়া করে নাম, ফোন এবং ঠিকানা দিন।");

@@ -12,7 +12,7 @@ class LandingPageController extends Controller
     {
         $product = Product::with('landingPage')
             ->where('slug', $slug)
-            ->frontendActive()
+            ->where('is_active', true)
             ->firstOrFail();
 
         $landingPage = $product->landingPage;

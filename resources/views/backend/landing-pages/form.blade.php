@@ -3,6 +3,23 @@
 @section('title', isset($landingPage) ? 'Edit Landing Page' : 'Create Landing Page')
 
 @section('content')
+@php
+    // Detect if this is a variant-based product (price = 0, variants exist)
+    $isVariantProduct = ($product->price == 0) && !empty($product->variants);
+    $firstVariantPrice = 0;
+    $firstVariantOldPrice = 0;
+    if ($isVariantProduct && !empty($product->variants)) {
+        foreach ($product->variants as $v) {
+            if (!empty($v['active']) && isset($v['price']) && $v['price'] > 0) {
+                $firstVariantPrice = (float) $v['price'];
+                $firstVariantOldPrice = round($firstVariantPrice * 1.5);
+                break;
+            }
+        }
+    }
+    $defaultNewPrice = $landingPage->new_price ?? ($isVariantProduct ? $firstVariantPrice : $product->price);
+    $defaultOldPrice = $landingPage->old_price ?? ($isVariantProduct ? $firstVariantOldPrice : ($product->price * 1.5));
+@endphp
 <div class="clearfix mb-4">
     <h4>{{ isset($landingPage) ? 'Edit Landing Page' : 'Create Landing Page' }} for: <span class="text-primary">{{ $product->name }}</span></h4>
 </div>
@@ -74,20 +91,85 @@
                 <h5 class="card-title mb-0">Pricing & Stock</h5>
             </div>
             <div class="card-body">
+                @if($isVariantProduct)
+                {{-- Per-Variant Pricing Table --}}
+                @php
+                    $activeVariants = array_filter($product->variants ?? [], fn($v) => !empty($v['active']));
+                    $savedVariantPrices = $landingPage->variant_prices ?? [];
+                @endphp
+                <div class="alert alert-info d-flex align-items-center gap-2 mb-3" style="border-radius:10px;">
+                    <i class="fas fa-layer-group"></i>
+                    <div><strong>Variant Product:</strong> প্রতিটি variant-এর জন্য আলাদা দাম সেট করুন। Landing page-এ variant select করলে সেই দাম দেখাবে।</div>
+                </div>
+                <div class="table-responsive mb-4">
+                    <table class="table table-bordered align-middle" style="border-radius:10px; overflow:hidden;">
+                        <thead class="table-dark">
+                            <tr>
+                                <th style="width: 60px;">Image</th>
+                                <th>Variant (Combo)</th>
+                                <th>SKU</th>
+                                <th>Old Price (৳)</th>
+                                <th>Sell Price (৳)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($activeVariants as $idx => $variant)
+                            @php
+                                $sku = $variant['sku'] ?? $idx;
+                                $comboLabel = implode(', ', array_map(fn($k,$v) => strtoupper($k).': '.strtoupper($v), array_keys($variant['combo'] ?? []), array_values($variant['combo'] ?? [])));
+                                $savedVP = collect($savedVariantPrices)->firstWhere('sku', $sku) ?? [];
+                            @endphp
+                            <tr>
+                                <td>
+                                    @if(!empty($variant['image']))
+                                        <img src="{{ asset('storage/' . $variant['image']) }}" alt="Variant Image" class="img-thumbnail" style="width:40px; height:40px; object-fit:cover;">
+                                    @else
+                                        <div class="bg-light text-center border rounded d-flex align-items-center justify-content-center text-muted" style="width:40px; height:40px; font-size:10px;">No Img</div>
+                                    @endif
+                                </td>
+                                <td><span class="badge bg-secondary">{{ $comboLabel ?: $sku }}</span></td>
+                                <td><strong>{{ $sku }}</strong><input type="hidden" name="variant_prices[{{ $idx }}][sku]" value="{{ $sku }}"></td>
+                                <td>
+                                    <input type="number" step="0.01" min="0"
+                                        name="variant_prices[{{ $idx }}][old_price]"
+                                        class="form-control form-control-sm"
+                                        value="{{ old("variant_prices.{$idx}.old_price", $savedVP['old_price'] ?? '') }}"
+                                        placeholder="যেমন: 1500">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" min="0"
+                                        name="variant_prices[{{ $idx }}][price]"
+                                        class="form-control form-control-sm"
+                                        value="{{ old("variant_prices.{$idx}.price", $savedVP['price'] ?? '') }}"
+                                        placeholder="যেমন: 999">
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                @else
+                {{-- Default Prices (Only for Simple Products) --}}
                 <div class="row">
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-6 mb-3">
                         <label class="form-label">Old Price (Regular Price)</label>
-                        <input type="number" step="0.01" name="old_price" class="form-control" value="{{ old('old_price', $landingPage->old_price ?? ($product->price * 1.5)) }}" required style="border-color: #a1a1a1 !important;">
+                        <input type="number" step="0.01" name="old_price" class="form-control" value="{{ old('old_price', $defaultOldPrice ?: '') }}" placeholder="যেমন: 1500" required style="border-color: #a1a1a1 !important;">
                     </div>
-                    <div class="col-md-4 mb-3">
+                    <div class="col-md-6 mb-3">
                         <label class="form-label">New Price (Sale Price)</label>
-                        <input type="number" step="0.01" name="new_price" class="form-control" value="{{ old('new_price', $landingPage->new_price ?? $product->price) }}" required style="border-color: #a1a1a1 !important;">
-                    </div>
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label">Discount Badge Text</label>
-                        <input type="text" name="discount_text" class="form-control" value="{{ old('discount_text', $landingPage->discount_text ?? 'বাঁচাচ্ছেন ৳' . (($landingPage->old_price ?? ($product->price * 1.5)) - ($landingPage->new_price ?? $product->price))) }}" required style="border-color: #a1a1a1 !important;">
+                        <input type="number" step="0.01" name="new_price" class="form-control" value="{{ old('new_price', $defaultNewPrice ?: '') }}" placeholder="যেমন: 999" required style="border-color: #a1a1a1 !important;">
                     </div>
                 </div>
+                @endif
+
+                <div class="row">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label">Discount Badge Text</label>
+                        <input type="text" name="discount_text" class="form-control" value="{{ old('discount_text', $landingPage->discount_text ?? '') }}" placeholder="যেমন: বাঁচাচ্ছেন ৳৫০১" required style="border-color: #a1a1a1 !important;">
+                    </div>
+                </div>
+
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Inside Dhaka Delivery Charge</label>

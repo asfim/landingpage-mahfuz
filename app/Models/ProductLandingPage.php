@@ -30,6 +30,7 @@ class ProductLandingPage extends Model
         'image',
         'header_script',
         'body_script',
+        'variant_prices',
     ];
 
     protected function casts(): array
@@ -38,6 +39,7 @@ class ProductLandingPage extends Model
             'is_active' => 'boolean',
             'features' => 'array',
             'testimonials' => 'array',
+            'variant_prices' => 'array',
             'old_price' => 'decimal:2',
             'new_price' => 'decimal:2',
         ];
