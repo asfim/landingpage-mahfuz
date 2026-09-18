@@ -79,7 +79,7 @@
     <div class="stat-card h-100" style="border-left: 4px solid #198754;">
       <p class="text-uppercase tracking-wider small fw-bold text-muted">Net Profit</p>
       <h2 class="mt-2 {{ $netProfit < 0 ? 'text-danger' : 'text-success' }}">৳{{ number_format($netProfit, 2) }}</h2>
-      <div class="small text-muted mt-1">Discounts: -৳{{ number_format($totalDiscount, 2) }}</div>
+      <div class="small text-muted mt-1">Sell Price − Buy Price</div>
     </div>
   </div>
   <div class="flex-grow-1" style="min-width: 220px; flex-basis: 0;">

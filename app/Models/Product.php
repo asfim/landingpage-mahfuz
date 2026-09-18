@@ -124,13 +124,28 @@ class Product extends Model
             if (empty($product->slug)) {
                 $product->slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $product->name)));
             }
+            $product->syncStock();
         });
 
         static::updating(function (Product $product) {
             if (empty($product->slug)) {
                 $product->slug = strtolower(trim(preg_replace('/[^A-Za-z0-9-]+/', '-', $product->name)));
             }
+            $product->syncStock();
         });
+    }
+
+    public function syncStock()
+    {
+        if (!empty($this->variants) && is_array($this->variants)) {
+            $totalStock = 0;
+            foreach ($this->variants as $variant) {
+                if (isset($variant['combo'])) {
+                    $totalStock += (int)($variant['stock'] ?? 0);
+                }
+            }
+            $this->stock = $totalStock;
+        }
     }
 
     public function reviews()
@@ -146,5 +161,50 @@ class Product extends Model
     public function getReviewsCountAttribute(): int
     {
         return (int) ($this->reviews_count ?? 0);
+    }
+
+    public function adjustStock(int $quantity, ?array $orderItemVariants = null)
+    {
+        if (empty($this->variants) || empty($orderItemVariants)) {
+            $this->stock += $quantity;
+            $this->save();
+            return;
+        }
+
+        $variants = $this->variants;
+        $matched = false;
+        
+        $itemVariantsForMatch = collect($orderItemVariants)
+            ->reject(fn ($val, $key) => str_starts_with($key, '_'))
+            ->all();
+
+        $totalStock = 0;
+        foreach ($variants as &$v) {
+            if (isset($v['combo'])) {
+                $isMatch = true;
+                foreach ($v['combo'] as $k => $val) {
+                    if (!isset($itemVariantsForMatch[$k]) || $itemVariantsForMatch[$k] !== $val) {
+                        $isMatch = false;
+                        break;
+                    }
+                }
+                
+                if ($isMatch && count($v['combo']) === count($itemVariantsForMatch)) {
+                    $v['stock'] = max(0, (int)($v['stock'] ?? 0) + $quantity);
+                    $matched = true;
+                }
+                
+                $totalStock += (int)($v['stock'] ?? 0);
+            }
+        }
+        
+        if ($matched) {
+            $this->variants = $variants;
+            $this->stock = $totalStock;
+            $this->save();
+        } else {
+            $this->stock += $quantity;
+            $this->save();
+        }
     }
 }

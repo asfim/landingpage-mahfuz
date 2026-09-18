@@ -277,18 +277,51 @@
 {!! $landingPage->body_script ?? '' !!}
 
 @php
-  // Price — prefer landing page price; fallback to product price or first variant price
+  // Price — prefer landing page price; fallback to product price (with discount applied) or first variant price
   $firstVariantPriceFallback = 0;
+  $firstVariantOldPriceFallback = 0;
   if (!empty($product->variants)) {
+      $now = now();
       foreach ($product->variants as $v) {
           if (!empty($v['active']) && isset($v['price']) && (float)$v['price'] > 0) {
-              $firstVariantPriceFallback = (float)$v['price'];
+              $vP = (float)$v['price'];
+              $vDiscount = (float)($v['discount'] ?? 0);
+              $vDiscountType = $v['discount_type'] ?? 'percent';
+              $isActive = true;
+              $startDate = !empty($v['discount_start']) ? \Carbon\Carbon::parse($v['discount_start']) : null;
+              $endDate = !empty($v['discount_end']) ? \Carbon\Carbon::parse($v['discount_end']) : null;
+              if ($startDate && $startDate->gt($now)) $isActive = false;
+              if ($endDate && $endDate->lt($now)) $isActive = false;
+
+              $firstVariantOldPriceFallback = $vP;
+              if ($vDiscount > 0 && $isActive) {
+                  if ($vDiscountType === 'percent') {
+                      $firstVariantPriceFallback = $vP - ($vP * $vDiscount / 100);
+                  } else {
+                      $firstVariantPriceFallback = $vP - $vDiscount;
+                  }
+                  $firstVariantPriceFallback = max(0, $firstVariantPriceFallback);
+              } else {
+                  $firstVariantPriceFallback = $vP;
+              }
               break;
           }
       }
   }
+
+  // For simple products, apply discount to get effective sell price
+  $effectiveOldPrice = $product->price > 0 ? $product->price : $firstVariantOldPriceFallback;
   $effectiveProductPrice = $product->price > 0 ? $product->price : $firstVariantPriceFallback;
-  $oldPrice = $landingPage->old_price > 0 ? $landingPage->old_price : ($effectiveProductPrice * 1.5);
+  if ($product->price > 0 && $product->has_active_discount) {
+      if ($product->discount_type === 'percent') {
+          $effectiveProductPrice = $product->price - ($product->price * $product->discount_value / 100);
+      } else {
+          $effectiveProductPrice = $product->price - $product->discount_value;
+      }
+      $effectiveProductPrice = max(0, $effectiveProductPrice);
+  }
+
+  $oldPrice = $landingPage->old_price > 0 ? $landingPage->old_price : $effectiveOldPrice;
   $newPrice = $landingPage->new_price > 0 ? $landingPage->new_price : $effectiveProductPrice;
   $insideCharge = $landingPage->inside_dhaka_charge ?? 60;
   $outsideCharge = $landingPage->outside_dhaka_charge ?? 120;
@@ -298,6 +331,7 @@
   $variantAttributes = []; // e.g. ['size' => ['m','xl'], 'color' => ['red','blue']]
   if (!empty($product->variants)) {
       $lpVariantPrices = $landingPage->variant_prices ?? [];
+      $now = now();
       foreach ($product->variants as $variant) {
           if (empty($variant['active'])) continue;
           if (!empty($variant['combo']) && is_array($variant['combo'])) {
@@ -308,16 +342,53 @@
               }
           }
           // Inject custom variant price from Landing Page if available
+          // Otherwise use discounted product price
           $sku = $variant['sku'] ?? null;
           if ($sku && !empty($lpVariantPrices)) {
               $customPricing = collect($lpVariantPrices)->firstWhere('sku', $sku);
               if ($customPricing && !empty($customPricing['price'])) {
                   $variant['price'] = (float) $customPricing['price'];
+              } elseif (!empty($variant['price'])) {
+                  // Apply product variant discount as fallback
+                  $vP = (float)$variant['price'];
+                  $vDiscount = (float)($variant['discount'] ?? 0);
+                  $vDiscountType = $variant['discount_type'] ?? 'percent';
+                  $isActive = true;
+                  $startDate = !empty($variant['discount_start']) ? \Carbon\Carbon::parse($variant['discount_start']) : null;
+                  $endDate = !empty($variant['discount_end']) ? \Carbon\Carbon::parse($variant['discount_end']) : null;
+                  if ($startDate && $startDate->gt($now)) $isActive = false;
+                  if ($endDate && $endDate->lt($now)) $isActive = false;
+                  if ($vDiscount > 0 && $isActive) {
+                      if ($vDiscountType === 'percent') {
+                          $variant['price'] = max(0, $vP - ($vP * $vDiscount / 100));
+                      } else {
+                          $variant['price'] = max(0, $vP - $vDiscount);
+                      }
+                  }
               }
               if ($customPricing && !empty($customPricing['old_price'])) {
                   $variant['old_price'] = (float) $customPricing['old_price'];
               }
+          } elseif (!empty($variant['price'])) {
+              // No landing page custom pricing — apply variant discount as sell price
+              $vP = (float)$variant['price'];
+              $vDiscount = (float)($variant['discount'] ?? 0);
+              $vDiscountType = $variant['discount_type'] ?? 'percent';
+              $isActive = true;
+              $startDate = !empty($variant['discount_start']) ? \Carbon\Carbon::parse($variant['discount_start']) : null;
+              $endDate = !empty($variant['discount_end']) ? \Carbon\Carbon::parse($variant['discount_end']) : null;
+              if ($startDate && $startDate->gt($now)) $isActive = false;
+              if ($endDate && $endDate->lt($now)) $isActive = false;
+              $variant['old_price'] = $variant['old_price'] ?? $vP;
+              if ($vDiscount > 0 && $isActive) {
+                  if ($vDiscountType === 'percent') {
+                      $variant['price'] = max(0, $vP - ($vP * $vDiscount / 100));
+                  } else {
+                      $variant['price'] = max(0, $vP - $vDiscount);
+                  }
+              }
           }
+
           $productVariants[] = $variant;
       }
   }

@@ -113,25 +113,48 @@
                                 @php
                                     $isVariantProduct = false;
                                     $totalStock = $product->stock;
-                                    $displayBuyPrice = (float)$product->buy_price;
-                                    $displaySellPrice = (float)$product->price;
+                                    $displayBuyPrice = $product->buy_price ? '৳' . number_format((float)$product->buy_price, 2) : '-';
+                                    $displaySellPrice = '৳' . number_format((float)$product->price, 2);
 
                                     if(!empty($product->variants)) {
                                         $variantStock = 0;
-                                        $variantBuyPriceSum = 0;
-                                        $variantSellPriceSum = 0;
+                                        $minBuyPrice = null;
+                                        $maxBuyPrice = null;
+                                        $minSellPrice = null;
+                                        $maxSellPrice = null;
+
                                         foreach($product->variants as $v) {
                                             if(isset($v['combo'])) { 
                                                 $isVariantProduct = true;
                                                 $variantStock += (int)($v['stock'] ?? 0);
-                                                $variantBuyPriceSum += (float)($v['buy_price'] ?? 0);
-                                                $variantSellPriceSum += (float)($v['price'] ?? 0);
+                                                
+                                                $vBuy = (float)($v['buy_price'] ?? 0);
+                                                $minBuyPrice = $minBuyPrice === null ? $vBuy : min($minBuyPrice, $vBuy);
+                                                $maxBuyPrice = $maxBuyPrice === null ? $vBuy : max($maxBuyPrice, $vBuy);
+
+                                                $vPrice = (float)($v['price'] ?? 0);
+                                                $vDiscount = (float)($v['discount'] ?? 0);
+                                                $vDiscountType = $v['discount_type'] ?? 'percent';
+                                                
+                                                if ($vDiscount > 0) {
+                                                    if ($vDiscountType === 'percent') {
+                                                        $vSell = $vPrice - ($vPrice * ($vDiscount / 100));
+                                                    } else {
+                                                        $vSell = $vPrice - $vDiscount;
+                                                    }
+                                                    $vSell = max(0, $vSell);
+                                                } else {
+                                                    $vSell = $vPrice;
+                                                }
+
+                                                $minSellPrice = $minSellPrice === null ? $vSell : min($minSellPrice, $vSell);
+                                                $maxSellPrice = $maxSellPrice === null ? $vSell : max($maxSellPrice, $vSell);
                                             }
                                         }
                                         if($isVariantProduct) {
                                             $totalStock = $variantStock;
-                                            $displayBuyPrice = $variantBuyPriceSum;
-                                            $displaySellPrice = $variantSellPriceSum;
+                                            $displayBuyPrice = $minBuyPrice == $maxBuyPrice ? '৳' . number_format($minBuyPrice, 2) : '৳' . number_format($minBuyPrice, 2) . ' - ৳' . number_format($maxBuyPrice, 2);
+                                            $displaySellPrice = $minSellPrice == $maxSellPrice ? '৳' . number_format($minSellPrice, 2) : '৳' . number_format($minSellPrice, 2) . ' - ৳' . number_format($maxSellPrice, 2);
                                         }
                                     }
                                 @endphp
@@ -142,8 +165,8 @@
                         </td>
                         <td>{{ $product->category->name ?? '-' }}</td>
                         <td>{{ $product->brand->name ?? '-' }}</td>
-                        <td>{{ $displayBuyPrice ? '৳' . number_format($displayBuyPrice, 2) : '-' }}</td>
-                        <td>৳{{ number_format($displaySellPrice, 2) }}</td>
+                        <td>{{ $displayBuyPrice }}</td>
+                        <td>{{ $displaySellPrice }}</td>
                         <td>{{ $totalStock }}</td>
                         <td>
                             <div class="form-check form-switch">

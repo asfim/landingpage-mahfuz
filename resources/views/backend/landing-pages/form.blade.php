@@ -4,21 +4,25 @@
 
 @section('content')
 @php
-    // Detect if this is a variant-based product (price = 0, variants exist)
-    $isVariantProduct = ($product->price == 0) && !empty($product->variants);
-    $firstVariantPrice = 0;
-    $firstVariantOldPrice = 0;
-    if ($isVariantProduct && !empty($product->variants)) {
-        foreach ($product->variants as $v) {
-            if (!empty($v['active']) && isset($v['price']) && $v['price'] > 0) {
-                $firstVariantPrice = (float) $v['price'];
-                $firstVariantOldPrice = round($firstVariantPrice * 1.5);
-                break;
-            }
+    // Detect if this is a variant-based product
+    $isVariantProduct = !empty($product->variants);
+    
+    $defaultOldPrice = $product->price;
+    $defaultNewPrice = $product->price;
+
+    if (!$isVariantProduct && $product->has_active_discount) {
+        if ($product->discount_type === 'percent') {
+            $defaultNewPrice = $product->price - ($product->price * $product->discount_value / 100);
+        } else {
+            $defaultNewPrice = $product->price - $product->discount_value;
         }
+        $defaultNewPrice = max(0, $defaultNewPrice);
     }
-    $defaultNewPrice = $landingPage->new_price ?? ($isVariantProduct ? $firstVariantPrice : $product->price);
-    $defaultOldPrice = $landingPage->old_price ?? ($isVariantProduct ? $firstVariantOldPrice : ($product->price * 1.5));
+    
+    // For variants, we will calculate defaults inside the loop
+
+    $defaultNewPrice = $landingPage->new_price ?? $defaultNewPrice;
+    $defaultOldPrice = $landingPage->old_price ?? $defaultOldPrice;
 @endphp
 <div class="clearfix mb-4">
     <h4>{{ isset($landingPage) ? 'Edit Landing Page' : 'Create Landing Page' }} for: <span class="text-primary">{{ $product->name }}</span></h4>
@@ -118,6 +122,22 @@
                                 $sku = $variant['sku'] ?? $idx;
                                 $comboLabel = implode(', ', array_map(fn($k,$v) => strtoupper($k).': '.strtoupper($v), array_keys($variant['combo'] ?? []), array_values($variant['combo'] ?? [])));
                                 $savedVP = collect($savedVariantPrices)->firstWhere('sku', $sku) ?? [];
+                                
+                                $vPrice = (float)($variant['price'] ?? 0);
+                                $vDiscount = (float)($variant['discount'] ?? 0);
+                                $vDiscountType = $variant['discount_type'] ?? 'percent';
+                                
+                                $vSell = $vPrice;
+                                if ($vDiscount > 0) {
+                                    if ($vDiscountType === 'percent') {
+                                        $vSell = $vPrice - ($vPrice * ($vDiscount / 100));
+                                    } else {
+                                        $vSell = $vPrice - $vDiscount;
+                                    }
+                                    $vSell = max(0, $vSell);
+                                }
+                                $defaultVariantOldPrice = $vPrice;
+                                $defaultVariantSellPrice = $vSell;
                             @endphp
                             <tr>
                                 <td>
@@ -133,14 +153,14 @@
                                     <input type="number" step="0.01" min="0"
                                         name="variant_prices[{{ $idx }}][old_price]"
                                         class="form-control form-control-sm"
-                                        value="{{ old("variant_prices.{$idx}.old_price", $savedVP['old_price'] ?? '') }}"
+                                        value="{{ old("variant_prices.{$idx}.old_price", $savedVP['old_price'] ?? $defaultVariantOldPrice) }}"
                                         placeholder="যেমন: 1500">
                                 </td>
                                 <td>
                                     <input type="number" step="0.01" min="0"
                                         name="variant_prices[{{ $idx }}][price]"
                                         class="form-control form-control-sm"
-                                        value="{{ old("variant_prices.{$idx}.price", $savedVP['price'] ?? '') }}"
+                                        value="{{ old("variant_prices.{$idx}.price", $savedVP['price'] ?? $defaultVariantSellPrice) }}"
                                         placeholder="যেমন: 999">
                                 </td>
                             </tr>

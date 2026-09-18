@@ -164,7 +164,23 @@
                                     {{ !empty($variant['buy_price']) ? number_format((float)$variant['buy_price'], 2) : '-' }}
                                 </td>
                                 <td class="text-end fw-bold text-primary">
-                                    {{ !empty($variant['price']) ? number_format((float)$variant['price'], 2) : 'Default' }}
+                                    @php
+                                        $vPrice = (float)($variant['price'] ?? 0);
+                                        $vDiscount = (float)($variant['discount'] ?? 0);
+                                        $vDiscountType = $variant['discount_type'] ?? 'percent';
+                                        
+                                        if ($vDiscount > 0) {
+                                            if ($vDiscountType === 'percent') {
+                                                $vSell = $vPrice - ($vPrice * ($vDiscount / 100));
+                                            } else {
+                                                $vSell = $vPrice - $vDiscount;
+                                            }
+                                            $vSell = max(0, $vSell);
+                                        } else {
+                                            $vSell = $vPrice;
+                                        }
+                                    @endphp
+                                    {{ !empty($variant['price']) ? number_format($vSell, 2) : 'Default' }}
                                 </td>
                                 <td class="text-center">
                                     <span class="badge {{ ($variant['stock'] ?? 0) > 0 ? 'bg-success' : 'bg-danger' }}">

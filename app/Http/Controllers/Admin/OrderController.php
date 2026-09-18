@@ -101,10 +101,6 @@ class OrderController extends Controller
 
             if (isset($updateData['order_status'])) {
                 $newStatus = $updateData['order_status'];
-                if ($oldStatus !== $newStatus) {
-                    $order->load('items.product');
-                    $this->adjustStock($order, $newStatus, $oldStatus);
-                }
             }
         }
 
@@ -181,10 +177,6 @@ class OrderController extends Controller
                     'payment_status' => $order->payment_status === 'paid' ? 'paid' : 'pending',
                 ]);
 
-                if ($oldStatus !== 'delivered') {
-                    $order->load('items.product');
-                    $this->adjustStock($order, 'delivered', $oldStatus);
-                }
 
                 $successCount++;
             } catch (\Exception $e) {
@@ -228,72 +220,5 @@ class OrderController extends Controller
         }
     }
 
-    private function adjustStock(Order $order, string $newStatus, string $oldStatus)
-    {
-        $decrements = ['confirmed', 'delivered'];
-        $increments = ['cancelled', 'returned'];
 
-        $wasDecremented = in_array($oldStatus, $decrements);
-        $willBeDecremented = in_array($newStatus, $decrements);
-
-        if (! $wasDecremented && $willBeDecremented) {
-            // Decrease stock
-            foreach ($order->items as $item) {
-                $this->updateStock($item, -1);
-            }
-        } elseif ($wasDecremented && ! $willBeDecremented) {
-            // Increase stock
-            foreach ($order->items as $item) {
-                $this->updateStock($item, 1);
-            }
-        }
-    }
-
-    private function updateStock(OrderItem $item, int $multiplier)
-    {
-        $product = $item->product;
-        if (! $product) {
-            return;
-        }
-
-        $quantity = $item->quantity * $multiplier;
-
-        $product->stock += $quantity;
-
-        if (! empty($item->variants) && is_array($product->variants)) {
-            $updatedVariants = $product->variants;
-            $found = false;
-
-            foreach ($updatedVariants as &$variant) {
-                if (isset($variant['combo']) && is_array($variant['combo'])) {
-                    $match = true;
-                    foreach ($item->variants as $key => $value) {
-                        $comboValue = null;
-                        foreach ($variant['combo'] as $cKey => $cVal) {
-                            if (strtolower(trim($cKey)) === strtolower(trim($key))) {
-                                $comboValue = $cVal;
-                                break;
-                            }
-                        }
-                        if ($comboValue !== $value) {
-                            $match = false;
-                            break;
-                        }
-                    }
-                    if ($match) {
-                        $variant['stock'] = max(0, (int) ($variant['stock'] ?? 0) + $quantity);
-                        $found = true;
-                        break;
-                    }
-                }
-            }
-
-            if ($found) {
-                $product->variants = $updatedVariants;
-            }
-        }
-
-        $product->stock = max(0, $product->stock);
-        $product->save();
-    }
 }

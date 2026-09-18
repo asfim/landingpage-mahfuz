@@ -16,7 +16,7 @@ class Order extends Model
             if (in_array($order->order_status, $decreasing)) {
                 foreach ($order->items as $item) {
                     if ($item->product) {
-                        $item->product->decrement('stock', $item->quantity);
+                        $item->product->adjustStock(-$item->quantity, $item->variants);
                     }
                 }
             }
@@ -35,13 +35,13 @@ class Order extends Model
                 if (! $wasDecreased && $shouldBeDecreased) {
                     foreach ($order->items as $item) {
                         if ($item->product) {
-                            $item->product->decrement('stock', $item->quantity);
+                            $item->product->adjustStock(-$item->quantity, $item->variants);
                         }
                     }
                 } elseif ($wasDecreased && ! $shouldBeDecreased) {
                     foreach ($order->items as $item) {
                         if ($item->product) {
-                            $item->product->increment('stock', $item->quantity);
+                            $item->product->adjustStock($item->quantity, $item->variants);
                         }
                     }
                 }
@@ -53,7 +53,7 @@ class Order extends Model
             if (in_array($order->order_status, $decreasing)) {
                 foreach ($order->items as $item) {
                     if ($item->product) {
-                        $item->product->increment('stock', $item->quantity);
+                        $item->product->adjustStock($item->quantity, $item->variants);
                     }
                 }
             }

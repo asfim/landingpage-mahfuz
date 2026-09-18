@@ -7,6 +7,8 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
@@ -43,39 +45,65 @@ class ReportController extends Controller
         $totalItemsSold = 0;
 
         foreach ($orders as $order) {
-            $totalRevenue += (float) $order->subtotal;
             $totalDiscount += (float) $order->discount_amount;
 
             foreach ($order->items as $item) {
                 $totalItemsSold += (int) $item->quantity;
-                
+
+                // Default: simple product — use order item's stored price as sell price
                 $buyPrice = $item->product ? (float) $item->product->buy_price : 0.00;
-                
-                if ($item->product && !empty($item->variants) && !empty($item->product->variants)) {
+                $sellPrice = (float) $item->price; // price stored at order time
+
+                // Variant product: match variant combo, get buy_price and apply variant discount
+                if ($item->product && ! empty($item->variants) && ! empty($item->product->variants)) {
+                    // Exclude internal _sku key from item variants for combo matching
+                    $itemVariantsForMatch = collect($item->variants)
+                        ->reject(fn ($val, $key) => str_starts_with($key, '_'))
+                        ->all();
+
                     foreach ($item->product->variants as $v) {
                         if (isset($v['combo'])) {
                             $isMatch = true;
                             foreach ($v['combo'] as $k => $val) {
-                                if (!isset($item->variants[$k]) || $item->variants[$k] !== $val) {
+                                if (! isset($itemVariantsForMatch[$k]) || $itemVariantsForMatch[$k] !== $val) {
                                     $isMatch = false;
                                     break;
                                 }
                             }
-                            if ($isMatch && count($v['combo']) === count($item->variants)) {
+                            if ($isMatch && count($v['combo']) === count($itemVariantsForMatch)) {
                                 if (isset($v['buy_price']) && is_numeric($v['buy_price'])) {
                                     $buyPrice = (float) $v['buy_price'];
+                                }
+
+                                // Apply variant discount to get effective sell price
+                                $variantPrice = isset($v['price']) && is_numeric($v['price']) ? (float) $v['price'] : $sellPrice;
+                                if (! empty($v['discount']) && is_numeric($v['discount']) && (float) $v['discount'] > 0) {
+                                    $discountType = $v['discount_type'] ?? 'percent';
+                                    if ($discountType === 'percent') {
+                                        $sellPrice = $variantPrice - ($variantPrice * ((float) $v['discount'] / 100));
+                                    } else {
+                                        $sellPrice = $variantPrice - (float) $v['discount'];
+                                    }
+                                    $sellPrice = max(0, $sellPrice);
+                                } else {
+                                    $sellPrice = $variantPrice;
                                 }
                                 break;
                             }
                         }
                     }
                 }
-                
+
+                // Total Revenue = effective sell price × quantity
+                $totalRevenue += $sellPrice * $item->quantity;
+
+                // Total Cost = buy_price × quantity
                 $totalCost += $buyPrice * $item->quantity;
             }
         }
 
-        $netProfit = ($totalRevenue - $totalCost) - $totalDiscount;
+        // Net Profit = Total Revenue (discounted sell price) - Total Cost (buy price)
+        $netProfit = $totalRevenue - $totalCost;
         $profitMargin = $totalRevenue > 0 ? ($netProfit / $totalRevenue) * 100 : 0;
 
         $chartDataQuery = Order::query()->whereBetween('created_at', [$startDate, $endDate]);
@@ -148,8 +176,8 @@ class ReportController extends Controller
             $pTotalStock = 0;
             $pTotalCost = 0.00;
             $pTotalRetail = 0.00;
-            
-            if (!empty($product->variants)) {
+
+            if (! empty($product->variants)) {
                 $isNewStructure = false;
                 foreach ($product->variants as $v) {
                     if (isset($v['combo'])) {
@@ -157,15 +185,15 @@ class ReportController extends Controller
                         break;
                     }
                 }
-                
+
                 if ($isNewStructure) {
                     $hasVariants = true;
                     foreach ($product->variants as $v) {
-                        if (!isset($v['active']) || $v['active']) {
+                        if (! isset($v['active']) || $v['active']) {
                             $vBuyPrice = isset($v['buy_price']) && is_numeric($v['buy_price']) ? (float) $v['buy_price'] : (float) ($product->buy_price ?? 0);
                             $vSalePrice = isset($v['price']) && is_numeric($v['price']) ? (float) $v['price'] : (float) ($product->price ?? 0);
                             $vStock = isset($v['stock']) ? (int) $v['stock'] : 0;
-                            
+
                             $pTotalStock += $vStock;
                             $pTotalCost += ($vBuyPrice * $vStock);
                             $pTotalRetail += ($vSalePrice * $vStock);
@@ -173,8 +201,8 @@ class ReportController extends Controller
                     }
                 }
             }
-            
-            if (!$hasVariants) {
+
+            if (! $hasVariants) {
                 $buyPrice = $product->buy_price ?? 0.00;
                 $salePrice = $product->price ?? 0.00;
                 $pStock = (int) $product->stock;
@@ -188,7 +216,7 @@ class ReportController extends Controller
             $product->computed_stock = $pTotalStock;
             $product->computed_cost = $pTotalCost;
             $product->computed_retail = $pTotalRetail;
-            
+
             // Add to totals
             $totalStockQty += $pTotalStock;
             $stockValueCost += $pTotalCost;
@@ -203,11 +231,11 @@ class ReportController extends Controller
             // Category aggregation
             $catId = $product->category_id;
             $catName = $product->category->name ?? 'Uncategorized';
-            if (!isset($categoryStockArray[$catId])) {
+            if (! isset($categoryStockArray[$catId])) {
                 $categoryStockArray[$catId] = [
                     'category_name' => $catName,
                     'total_stock' => 0,
-                    'retail_value' => 0.00
+                    'retail_value' => 0.00,
                 ];
             }
             $categoryStockArray[$catId]['total_stock'] += $pTotalStock;
@@ -220,15 +248,15 @@ class ReportController extends Controller
         $sortedProducts = $products->sortBy('computed_stock')->values();
 
         // Manual pagination
-        $currentPage = \Illuminate\Pagination\Paginator::resolveCurrentPage();
+        $currentPage = Paginator::resolveCurrentPage();
         $perPage = 15;
         $currentPageItems = $sortedProducts->slice(($currentPage - 1) * $perPage, $perPage)->values();
-        $paginatedProducts = new \Illuminate\Pagination\LengthAwarePaginator(
+        $paginatedProducts = new LengthAwarePaginator(
             $currentPageItems,
             $sortedProducts->count(),
             $perPage,
             $currentPage,
-            ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath()]
+            ['path' => Paginator::resolveCurrentPath()]
         );
 
         // Prepare category stock for chart
