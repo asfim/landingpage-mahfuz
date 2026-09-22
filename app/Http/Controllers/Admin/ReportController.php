@@ -122,22 +122,64 @@ class ReportController extends Controller
             ->orderBy('date')
             ->get();
 
-        $topSelling = OrderItem::query()
+        // Top 10 — recalculate revenue using discount-applied sell price (same logic as totalRevenue)
+        $topSellingItems = OrderItem::query()
+            ->with('product')
             ->whereHas('order', function ($q) use ($startDate, $endDate, $status) {
                 $q->whereBetween('created_at', [$startDate, $endDate]);
                 if ($status !== 'all') {
                     $q->where('order_status', $status);
                 }
             })
-            ->select(
-                'product_name',
-                DB::raw('SUM(quantity) as total_qty'),
-                DB::raw('SUM(line_total) as total_revenue')
-            )
-            ->groupBy('product_name')
-            ->orderBy('total_qty', 'desc')
-            ->limit(10)
             ->get();
+
+        $topSellingMap = [];
+        foreach ($topSellingItems as $item) {
+            $sellPrice = (float) $item->price;
+
+            if ($item->product && ! empty($item->variants) && ! empty($item->product->variants)) {
+                $itemVariantsForMatch = collect($item->variants)
+                    ->reject(fn ($val, $key) => str_starts_with($key, '_'))
+                    ->all();
+
+                foreach ($item->product->variants as $v) {
+                    if (isset($v['combo'])) {
+                        $isMatch = true;
+                        foreach ($v['combo'] as $k => $val) {
+                            if (! isset($itemVariantsForMatch[$k]) || $itemVariantsForMatch[$k] !== $val) {
+                                $isMatch = false;
+                                break;
+                            }
+                        }
+                        if ($isMatch && count($v['combo']) === count($itemVariantsForMatch)) {
+                            $variantPrice = isset($v['price']) && is_numeric($v['price']) ? (float) $v['price'] : $sellPrice;
+                            if (! empty($v['discount']) && is_numeric($v['discount']) && (float) $v['discount'] > 0) {
+                                $discountType = $v['discount_type'] ?? 'percent';
+                                if ($discountType === 'percent') {
+                                    $sellPrice = $variantPrice - ($variantPrice * ((float) $v['discount'] / 100));
+                                } else {
+                                    $sellPrice = $variantPrice - (float) $v['discount'];
+                                }
+                                $sellPrice = max(0, $sellPrice);
+                            } else {
+                                $sellPrice = $variantPrice;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+
+            $name = $item->product_name;
+            if (! isset($topSellingMap[$name])) {
+                $topSellingMap[$name] = ['product_name' => $name, 'total_qty' => 0, 'total_revenue' => 0.0];
+            }
+            $topSellingMap[$name]['total_qty'] += (int) $item->quantity;
+            $topSellingMap[$name]['total_revenue'] += $sellPrice * $item->quantity;
+        }
+
+        usort($topSellingMap, fn ($a, $b) => $b['total_qty'] <=> $a['total_qty']);
+        $topSelling = collect(array_slice($topSellingMap, 0, 10))->map(fn ($r) => (object) $r);
 
         return view('backend.reports.sales', compact(
             'startDate',
