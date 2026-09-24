@@ -59,14 +59,17 @@
             </a>
         </div>
         <div class="d-flex gap-2">
+            <a href="{{ route('admin.orders.pdf', request()->all()) }}" class="btn btn-sm btn-danger text-white fw-bold">
+                <i class="bi bi-file-earmark-pdf me-1"></i> Export PDF
+            </a>
+            <a href="{{ route('admin.orders.export', request()->all()) }}" class="btn btn-sm btn-success text-white fw-bold">
+                <i class="bi bi-file-earmark-excel me-1"></i> Export CSV
+            </a>
             <button type="button" id="bulkPrintBtn" class="btn btn-sm btn-info text-white"
                 style="display: none; background-color: #0dcaf0 !important; border-color: #0dcaf0 !important;">
                 <i class="bi bi-printer me-1"></i> Print Selected Invoices (<span id="selectedCount">0</span>)
             </button>
-            <button type="button" id="bulkSendSteadfastBtn" class="btn btn-sm btn-warning text-dark fw-bold"
-                style="display: none; background-color: #ffc107 !important; border-color: #ffc107 !important;">
-                <i class="bi bi-truck me-1"></i> Send Selected to Steadfast (<span id="selectedCountSteadfast">0</span>)
-            </button>
+
         </div>
     </div>
 
@@ -130,6 +133,7 @@
                     <th>Product Name</th>
                     <th>Customer</th>
                     <th>Phone</th>
+                    <th style="width:150px;">Address</th>
                     <th>Total</th>
                     <th style="width:170px;">Order Status</th>
                     <th style="width:190px;">Update Status</th>
@@ -151,6 +155,7 @@
                         </td>
                         <td>{{ $order->customer_name }}</td>
                         <td>{{ $order->customer_phone }}</td>
+                        <td class="text-wrap" style="max-width: 150px; font-size: 13px;">{{ $order->customer_address }}</td>
                         <td class="fw-bold">৳{{ number_format($order->total, 2) }}</td>
                         <td>
                             @if ($order->order_status === 'pending')
@@ -196,13 +201,7 @@
                                     title="View">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                @if ($order->order_status === 'pending' || $order->order_status === 'confirmed')
-                                    <button type="button"
-                                        class="btn btn-sm btn-warning text-dark send-single-steadfast-btn"
-                                        data-id="{{ $order->id }}" title="Send to Steadfast">
-                                        <i class="bi bi-truck"></i>
-                                    </button>
-                                @endif
+
                                 <form action="{{ route('admin.orders.destroy', $order) }}" method="POST"
                                     class="d-inline"
                                     onsubmit="return confirm('Are you sure you want to delete this order?')">

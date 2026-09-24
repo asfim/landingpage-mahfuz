@@ -216,9 +216,100 @@ class OrderController extends Controller
                 ]);
             }
 
-            return redirect()->back();
         }
     }
 
+    public function export(Request $request)
+    {
+        $query = Order::query()->with('items')->latest();
 
+        if ($request->filled('status')) {
+            $query->where('order_status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('invoice_no', 'like', "%{$search}%")
+                    ->orWhere('customer_name', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%");
+            });
+        }
+
+        $orders = $query->get();
+
+        $filename = "orders_export_" . date('Y-m-d_H-i-s') . ".csv";
+        $headers = [
+            "Content-type"        => "text/csv",
+            "Content-Disposition" => "attachment; filename=$filename",
+            "Pragma"              => "no-cache",
+            "Cache-Control"       => "must-revalidate, post-check=0, pre-check=0",
+            "Expires"             => "0"
+        ];
+
+        $columns = [
+            'Invoice No',
+            'Customer Name',
+            'Customer Phone',
+            'Address',
+            'Products',
+            'Total Amount',
+            'Order Status',
+            'Payment Status',
+            'Order Date'
+        ];
+
+        $callback = function() use($orders, $columns) {
+            $file = fopen('php://output', 'w');
+            // add BOM for UTF-8 compatibility
+            fputs($file, $bom =(chr(0xEF) . chr(0xBB) . chr(0xBF)));
+            fputcsv($file, $columns);
+
+            foreach ($orders as $order) {
+                $products = [];
+                foreach ($order->items as $item) {
+                    $products[] = $item->product_name . ' (Qty: ' . $item->quantity . ')';
+                }
+
+                $row = [
+                    $order->invoice_no,
+                    $order->customer_name,
+                    '="' . $order->customer_phone . '"',
+                    $order->customer_address,
+                    implode(' | ', $products),
+                    $order->total,
+                    ucfirst($order->order_status),
+                    ucfirst($order->payment_status),
+                    $order->created_at->format('Y-m-d H:i:s')
+                ];
+                fputcsv($file, $row);
+            }
+            fclose($file);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $query = Order::query()->with('items')->latest();
+
+        if ($request->filled('status')) {
+            $query->where('order_status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('invoice_no', 'like', "%{$search}%")
+                    ->orWhere('customer_name', 'like', "%{$search}%")
+                    ->orWhere('customer_phone', 'like', "%{$search}%");
+            });
+        }
+
+        $orders = $query->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('backend.orders.pdf', compact('orders'))->setPaper('a4', 'landscape');
+        return $pdf->download('orders_export_' . date('Y-m-d_H-i-s') . '.pdf');
+    }
 }

@@ -15,12 +15,13 @@
     * { margin:0; padding:0; box-sizing:border-box; }
     html, body {
       font-family: 'Inter', sans-serif;
-      background: #f9fafc;
-      color: #0b1a2a;
+      background: #f6f8fb;
+      color: #1a2535;
       scroll-behavior: smooth;
       overflow-x: hidden;
       width: 100%;
       max-width: 100%;
+      line-height: 1.65;
     }
     section {
       overflow-x: hidden;
@@ -31,7 +32,39 @@
       --dark-bg: #0a1a2b;
       --card-border: 1px solid rgba(0,0,0,0.06);
       --shadow-soft: 0 12px 30px -10px rgba(0,0,0,0.08);
+      --section-bg-alt: #f0f4fa;
+      --primary-color: #b33e0f;
     }
+    /* ===== SECTION HEADER STYLE ===== */
+    .section-title {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #1a2535;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+    .section-title span { color: var(--accent); }
+    .section-subtitle {
+      color: #64748b;
+      font-size: 1.05rem;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .section-pill {
+      display: inline-block;
+      background: #fff2ee;
+      color: var(--accent);
+      border: 1px solid #f5cbb7;
+      border-radius: 100px;
+      padding: 4px 16px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    /* ===== TEXT ACCENT ===== */
+    .text-accent { color: var(--accent) !important; }
     .btn-accent {
       background: linear-gradient(145deg, #b33e0f, #942f08);
       border: none;
@@ -90,33 +123,61 @@
       50% { transform: translateY(-10px); }
       100% { transform: translateY(0px); }
     }
-    .timer-glow {
-      background: rgba(10, 26, 43, 0.85);
-      backdrop-filter: blur(14px);
-      border-radius: 80px;
-      padding: 0.8rem 1.8rem;
-      border: 1px solid rgba(255,215,170,0.2);
+    .timer-section-wrap {
+      background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+      border-radius: 24px;
+      padding: 1.4rem 2rem;
       display: inline-flex;
-      gap: 1.2rem;
-      flex-wrap: wrap;
-      justify-content: center;
-      box-shadow: 0 0 0 0 rgba(179,62,15,0.25);
-      animation: pulseBorder 2.2s infinite;
-    }
-    @keyframes pulseBorder {
-      0% { box-shadow: 0 0 0 0 rgba(179,62,15,0.15); }
-      70% { box-shadow: 0 0 0 16px rgba(179,62,15,0); }
-      100% { box-shadow: 0 0 0 0 rgba(179,62,15,0); }
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      border: 1px solid rgba(255,255,255,0.08);
     }
     .time-block {
-      background: #fff;
-      border-radius: 28px;
-      padding: 0.4rem 1rem;
-      min-width: 72px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 0.8rem 1.2rem;
+      min-width: 80px;
       text-align: center;
-      border: 1px solid #e4e9f0;
+      border: 1px solid rgba(255,255,255,0.12);
+      backdrop-filter: blur(4px);
     }
-    .time-number { font-weight: 800; font-size: 1.9rem; color: #0b1a2a; letter-spacing: 1px; }
+    .time-number {
+      font-weight: 800;
+      font-size: 2.4rem;
+      background: linear-gradient(135deg, #fff 40%, #f59e0b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 2px;
+      line-height: 1;
+    }
+    .time-label {
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.55);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+    .time-sep {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #f59e0b;
+      align-self: flex-start;
+      padding-top: 0.6rem;
+      line-height: 1;
+    }
+    .timer-badge {
+      background: linear-gradient(135deg, #b33e0f, #e05a2b);
+      border-radius: 100px;
+      padding: 4px 14px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      display: inline-block;
+    }
     .price-show {
       background: #fff;
       border-radius: 48px;
@@ -254,7 +315,20 @@
       .form-premium h3 { font-size: 1.5rem !important; }
       .form-control-premium { padding: 10px 18px !important; border-radius: 30px; }
       
-      .wa-sticky { bottom: 16px !important; right: 16px !important; padding: 8px 16px !important; font-size: 0.9rem !important; }
+      .wa-sticky { 
+        bottom: 16px !important; 
+        right: 16px !important; 
+        width: 56px !important; 
+        height: 56px !important; 
+        padding: 0 !important; 
+        border-radius: 50% !important; 
+        display: flex !important; 
+        align-items: center !important; 
+        justify-content: center !important; 
+      }
+      .wa-sticky a { justify-content: center !important; margin-left: 2px; }
+      
+      .variant-img-wrapper { height: 200px !important; }
     }
     @keyframes shake {
       0%,100% { transform: translateX(0); }
@@ -269,6 +343,48 @@
     .variant-btn:hover {
       border-color: #b33e0f;
       color: #b33e0f;
+    }
+
+    /* ===== PREMIUM CARD DESIGN ===== */
+    .card,
+    .variant-card,
+    .premium-card {
+      border: 1px solid rgba(0,0,0,0.07) !important;
+      border-radius: 20px !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04) !important;
+      transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+      background: #fff;
+    }
+    .card:hover,
+    .variant-card:hover {
+      transform: translateY(-6px) !important;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.13), 0 4px 12px rgba(179,62,15,0.08) !important;
+    }
+    .variant-card .variant-img-wrapper {
+      background: linear-gradient(145deg, #fdf6f2, #f9f5f0) !important;
+      border-bottom: 1px solid #f0ebe6;
+    }
+    .variant-card .card-body {
+      padding: 1.2rem 1rem !important;
+    }
+    .variant-card .card-title {
+      font-size: 0.95rem;
+    }
+    @media (max-width: 768px) {
+      .variant-card .card-body { padding: 0.8rem 0.6rem !important; }
+      .variant-card .card-title { font-size: 0.82rem; }
+      .variant-card .price-section span { font-size: 0.85rem !important; }
+    }
+    /* Testimonial & feature cards */
+    .premium-card {
+      background: #fff !important;
+      border-radius: 24px !important;
+      box-shadow: 0 6px 28px rgba(0,0,0,0.07), 0 1px 6px rgba(0,0,0,0.04) !important;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .premium-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 18px 44px rgba(0,0,0,0.12), 0 4px 14px rgba(179,62,15,0.07) !important;
     }
   </style>
   {!! $landingPage->header_script ?? '' !!}
@@ -369,6 +485,12 @@
               if ($customPricing && !empty($customPricing['old_price'])) {
                   $variant['old_price'] = (float) $customPricing['old_price'];
               }
+              if ($customPricing && isset($customPricing['inside_dhaka_charge'])) {
+                  $variant['inside_dhaka_charge'] = (float) $customPricing['inside_dhaka_charge'];
+              }
+              if ($customPricing && isset($customPricing['outside_dhaka_charge'])) {
+                  $variant['outside_dhaka_charge'] = (float) $customPricing['outside_dhaka_charge'];
+              }
           } elseif (!empty($variant['price'])) {
               // No landing page custom pricing — apply variant discount as sell price
               $vP = (float)$variant['price'];
@@ -419,15 +541,15 @@
       <div class="col-lg-6 text-center" data-aos="fade-left" data-aos-duration="1000" data-aos-delay="150">
         @php
           $heroImage = 'https://placehold.co/400x400/eee/aaa?text=No+Img';
-          if ($hasVariants && !empty($productVariants[0]['image'])) {
-              $heroImage = asset('storage/' . $productVariants[0]['image']);
-          } elseif ($landingPage->image) {
+          if (!empty($landingPage->image)) {
               $heroImage = asset('storage/' . $landingPage->image);
-          } elseif ($product->image) {
+          } elseif ($hasVariants && !empty($productVariants[0]['image'])) {
+              $heroImage = asset('storage/' . $productVariants[0]['image']);
+          } elseif (!empty($product->image)) {
               $heroImage = asset('storage/' . $product->image);
           }
         @endphp
-        <img src="{{ $heroImage }}" alt="{{ $product->name }}" class="img-fluid img-soft-rounded floating-soft" style="max-height:420px; width:auto; object-fit: cover;">
+        <img loading="lazy" src="{{ $heroImage }}" alt="{{ $product->name }}" class="img-fluid img-soft-rounded floating-soft" style="max-height:420px; width:auto; object-fit: cover;">
       </div>
     </div>
   </div>
@@ -436,10 +558,24 @@
 <!-- ======== TIMER + TRUST BADGES ======== -->
 <section class="py-4">
   <div class="container text-center">
-    <div class="timer-glow mx-auto" data-aos="zoom-in" data-aos-duration="700">
-      <div class="time-block"><div class="time-number" id="hours">00</div><div class="small text-muted">ঘণ্টা</div></div>
-      <div class="time-block"><div class="time-number" id="minutes">00</div><div class="small text-muted">মিনিট</div></div>
-      <div class="time-block"><div class="time-number" id="seconds">00</div><div class="small text-muted">সেকেন্ড</div></div>
+    <div data-aos="zoom-in" data-aos-duration="700" style="display:flex; flex-direction:column; align-items:center; gap:10px;">
+      <div class="timer-badge">🔥 অফার শেষ হওয়ার আগেই অর্ডার করুন!</div>
+      <div class="timer-section-wrap">
+        <div class="time-block">
+          <div class="time-number" id="hours">00</div>
+          <div class="time-label">ঘণ্টা</div>
+        </div>
+        <div class="time-sep">:</div>
+        <div class="time-block">
+          <div class="time-number" id="minutes">00</div>
+          <div class="time-label">মিনিট</div>
+        </div>
+        <div class="time-sep">:</div>
+        <div class="time-block">
+          <div class="time-number" id="seconds">00</div>
+          <div class="time-label">সেকেন্ড</div>
+        </div>
+      </div>
     </div>
     <div class="d-flex justify-content-center gap-3 flex-wrap mt-5" data-aos="fade-up" data-aos-delay="250">
       <span class="trust-pill"><i class="fas fa-shield-alt text-primary me-1"></i> ক্রেতা সুরক্ষা</span>
@@ -452,11 +588,12 @@
 
 @if($hasVariants)
 <!-- ======== VARIANT SHOWCASE ======== -->
-<section id="variants" class="py-5 bg-light">
+<section id="variants" class="py-5" style="background: linear-gradient(180deg, #f6f8fb 0%, #eef2f9 100%);">
   <div class="container">
     <div class="text-center mb-5" data-aos="fade-up">
-      <h2 class="fw-bold" style="color:var(--primary-color);">আপনার পছন্দের ভ্যারিয়েন্টটি বেছে নিন</h2>
-      <p class="text-muted">স্টক ফুরিয়ে যাওয়ার আগেই অর্ডার করুন!</p>
+      <div class="section-pill">🛒 ভ্যারিয়েন্ট</div>
+      <h2 class="section-title">আপনার পছন্দের <span>ভ্যারিয়েন্ট</span> বেছে নিন</h2>
+      <p class="section-subtitle">স্টক ফুরিয়ে যাওয়ার আগেই অর্ডার করুন!</p>
     </div>
     
     <div class="row g-4 justify-content-center">
@@ -468,10 +605,10 @@
           $vOldPrice = !empty($variant['old_price']) && $variant['old_price'] > 0 ? $variant['old_price'] : ($vPrice * 1.5);
           $vImage = !empty($variant['image']) ? asset('storage/'.$variant['image']) : 'https://placehold.co/400x400/eee/aaa?text=No+Img';
         @endphp
-        <div class="col-12 col-sm-6 col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="{{ $idx * 50 }}">
-          <div class="card h-100 border-0 shadow-sm variant-card" style="border-radius:15px; overflow:hidden; transition:transform 0.3s ease;">
-            <div style="position:relative; padding-top:100%;">
-              <img src="{{ $vImage }}" alt="{{ $comboLabel }}" style="position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover;">
+        <div class="col-6 col-sm-6 col-md-4 col-lg-3" data-aos="fade-up" data-aos-delay="{{ $idx * 50 }}">
+          <div class="card h-100 variant-card" style="border-radius:18px; overflow:hidden;">
+            <div class="text-center bg-white variant-img-wrapper" style="height: 300px; display: flex; align-items: center; justify-content: center; padding: 10px;">
+              <img loading="lazy" src="{{ $vImage }}" alt="{{ $comboLabel }}" style="max-width: 100%; max-height: 100%; object-fit: contain;">
             </div>
             <div class="card-body text-center p-4">
               <h5 class="card-title fw-bold mb-2">{{ $comboLabel }}</h5>
@@ -480,7 +617,7 @@
                 <span class="fw-bold fs-5 text-accent">৳{{ number_format($vPrice, 0, '.', '') }}</span>
               </div>
               <button type="button" class="btn btn-accent w-100 py-2 fw-semibold order-variant-btn" data-sku="{{ $sku }}" onclick="selectVariantAndScroll('{{ $sku }}')">
-                <i class="fas fa-shopping-cart me-1"></i> অর্ডার করুন
+                <i class="fas fa-shopping-cart"></i> <span class="d-none d-sm-inline ms-1">অর্ডার করুন</span>
               </button>
             </div>
           </div>
@@ -501,7 +638,7 @@
           @php
             $showcaseImage = $landingPage->image ? asset('storage/' . $landingPage->image) : ($product->image ? asset('storage/' . $product->image) : 'https://placehold.co/400x400/eee/aaa?text=No+Img');
           @endphp
-          <img src="{{ $showcaseImage }}" alt="{{ $product->name }}" class="img-fluid rounded-4" style="max-height: 350px; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.1); border: 2px solid #e2e8f0;">
+          <img loading="lazy" src="{{ $showcaseImage }}" alt="{{ $product->name }}" class="img-fluid rounded-4" style="max-height: 350px; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.1); border: 2px solid #e2e8f0;">
         </div>
         
         <!-- Right Side: Price Details -->
@@ -539,16 +676,22 @@
 
 <!-- ======== 5 PRODUCT FEATURES (GRID) ======== -->
 @if(!empty($landingPage->features))
-<section id="features" class="py-5">
+<section id="features" class="py-5" style="background:#fff;">
   <div class="container">
-    <h2 class="fw-bold text-center mb-5" data-aos="fade-up"> <span style="color:#b33e0f;">৫টি</span> ভিন্ন ডিজাইন, একেকটি অনন্য</h2>
+    <div class="text-center mb-5" data-aos="fade-up">
+      <div class="section-pill">✨ বৈশিষ্ট্য</div>
+      <h2 class="section-title">কেন এই পণ্য <span>বিশেষ?</span></h2>
+      <p class="section-subtitle">আমাদের পণ্যের অনন্য বৈশিষ্ট্যগুলো জানুন</p>
+    </div>
     <div class="row g-4">
       @foreach($landingPage->features as $feature)
       <div class="col-md-6 col-lg-4" data-aos="fade-up" data-aos-delay="100">
-        <div class="premium-card p-4 text-center h-100 d-flex flex-column align-items-center">
-          <div class="rounded-circle bg-light p-3 mb-3" style="width:80px;height:80px;display:flex;align-items:center;justify-content:center;border:2px solid #b33e0f20;"><i class="{{ $feature['icon'] ?? 'fas fa-tshirt' }} fa-3x" style="color:#b33e0f;"></i></div>
-          <h5 class="fw-bold">{{ $feature['title'] ?? '' }}</h5>
-          <p class="small text-muted">{{ $feature['description'] ?? '' }}</p>
+        <div class="premium-card p-4 text-center h-100 d-flex flex-column align-items-center" style="border-radius:20px;">
+          <div class="mb-3" style="width:72px;height:72px;display:flex;align-items:center;justify-content:center;border-radius:18px;background:linear-gradient(135deg,#fff2ee,#ffe4d4);border:1.5px solid #f5cbb7;">
+            <i class="{{ $feature['icon'] ?? 'fas fa-tshirt' }} fa-2x" style="color:#b33e0f;"></i>
+          </div>
+          <h5 class="fw-bold mb-2">{{ $feature['title'] ?? '' }}</h5>
+          <p class="small text-muted mb-0">{{ $feature['description'] ?? '' }}</p>
         </div>
       </div>
       @endforeach
@@ -558,12 +701,17 @@
 @endif
 
 <!-- ======== ORDER FORM ======== -->
-<section id="order" class="py-5">
+<section id="order" class="py-5" style="background: linear-gradient(180deg, #f6f8fb 0%, #fff 100%);">
   <div class="container">
+    <div class="text-center mb-4" data-aos="fade-up">
+      <div class="section-pill">📦 অর্ডার করুন</div>
+      <h2 class="section-title">এখনই <span>অর্ডার</span> করুন</h2>
+      <p class="section-subtitle">নিচে তথ্য দিন, আমরা দ্রুত ডেলিভারি দেব</p>
+    </div>
     <div class="row justify-content-center">
       <div class="col-lg-10">
-        <div class="form-premium" data-aos="fade-up" data-aos-duration="1000">
-          <h3 class="fw-bold text-center mb-4"><i class="fas fa-pen-fancy me-2" style="color:#b33e0f;"></i> আপনার অর্ডার কনফর্ম করুন</h3>
+        <div class="form-premium" data-aos="fade-up" data-aos-duration="1000" style="border-radius:28px; box-shadow:0 20px 60px -16px rgba(0,0,0,0.1);">
+          <h3 class="fw-bold text-center mb-4"><i class="fas fa-pen-fancy me-2" style="color:#b33e0f;"></i> অর্ডার ফর্ম পূরণ করুন</h3>
           
           <form id="orderForm">
             <div class="row g-4">
@@ -588,9 +736,9 @@
 
               <!-- Right Column: Order Summary -->
               <div class="col-md-5">
-                <div class="card border-0 shadow-sm bg-light" style="border-radius: 24px;">
+                <div class="card border-0" style="border-radius:20px; background:linear-gradient(145deg,#f8fafe,#f0f4fb); border:1px solid #e2e8f0 !important;">
                   <div class="card-body p-4">
-                    <h5 class="fw-bold mb-3 border-bottom pb-2">অর্ডার সামারি</h5>
+                    <h5 class="fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">📋 অর্ডার সামারি</h5>
 
                     @if($hasVariants)
                     {{-- Selected Variant Display / Dropdown --}}
@@ -598,7 +746,7 @@
                       <label class="form-label fw-semibold">আপনার পছন্দের ভ্যারিয়েন্ট <span class="text-danger">*</span></label>
                       <input type="hidden" name="variant_sku" id="selectedVariantSku" value="">
                       <div class="dropdown w-100">
-                        <button class="btn btn-outline-secondary w-100 text-start d-flex align-items-center justify-content-between p-2" type="button" id="variantDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" style="border-radius:12px; border-color:#cbd5e1; background:#fff;">
+                        <button class="btn btn-outline-secondary w-100 text-start d-flex align-items-center justify-content-between p-2" type="button" id="variantDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside" style="border-radius:12px; border-color:#cbd5e1; background:#fff;">
                           <div class="d-flex align-items-center gap-3" id="variantDropdownSelected">
                             <div style="width:40px; height:40px; background:#f1f5f9; border-radius:8px; display:flex; align-items:center; justify-content:center;">
                               <i class="fas fa-box-open text-muted"></i>
@@ -614,10 +762,15 @@
                               $comboLabel = implode(', ', array_map(fn($k,$v) => strtoupper($k).': '.strtoupper($v), array_keys($variant['combo'] ?? []), array_values($variant['combo'] ?? [])));
                               $vPrice = !empty($variant['price']) && $variant['price'] > 0 ? $variant['price'] : $effectiveProductPrice;
                               $vImage = !empty($variant['image']) ? asset('storage/'.$variant['image']) : 'https://placehold.co/400x400/eee/aaa?text=No+Img';
+                              $vInsideCharge = $variant['inside_dhaka_charge'] ?? $insideCharge;
+                              $vOutsideCharge = $variant['outside_dhaka_charge'] ?? $outsideCharge;
                             @endphp
                             <li>
-                              <a class="dropdown-item d-flex align-items-center gap-3 p-2 rounded variant-dropdown-item" href="#" data-sku="{{ $sku }}" data-price="{{ $vPrice }}" data-img="{{ $vImage }}" data-label="{{ $comboLabel }}" style="transition:background 0.2s;">
-                                <img src="{{ $vImage }}" alt="{{ $comboLabel }}" style="width:40px; height:40px; object-fit:cover; border-radius:8px;">
+                              <a class="dropdown-item d-flex align-items-center gap-3 p-2 rounded variant-dropdown-item" href="#" data-sku="{{ $sku }}" data-price="{{ $vPrice }}" data-img="{{ $vImage }}" data-label="{{ $comboLabel }}" data-inside-charge="{{ $vInsideCharge }}" data-outside-charge="{{ $vOutsideCharge }}" style="transition:background 0.2s;">
+                                <div class="form-check m-0 pointer-events-none">
+                                  <input class="form-check-input variant-checkbox" type="checkbox" value="{{ $sku }}" style="pointer-events:none; border: 2px solid #94a3b8; width: 1.2rem; height: 1.2rem;">
+                                </div>
+                                <img loading="lazy" src="{{ $vImage }}" alt="{{ $comboLabel }}" style="width:40px; height:40px; object-fit:cover; border-radius:8px;">
                                 <div class="flex-grow-1">
                                   <div class="fw-bold">{{ $comboLabel }}</div>
                                   <div class="text-accent fw-semibold small">৳{{ number_format($vPrice, 0, '.', '') }}</div>
@@ -683,35 +836,85 @@
   </div>
 </section>
 
-<!-- ======== BONUS: 5TH SECTION – TESTIMONIAL / TRUST ======== -->
+<!-- ======== TESTIMONIALS ======== -->
 @if(!empty($landingPage->testimonials))
-<section class="py-5 bg-light">
-  <div class="container text-center">
-    <h3 class="fw-bold mb-4" data-aos="fade-right">ক্রেতাদের মতামত</h3>
-    <div class="row g-4">
-      @foreach($landingPage->testimonials as $t)
-      <div class="col-md-4" data-aos="flip-left" data-aos-delay="100">
-        <div class="premium-card p-4 h-100 d-flex flex-column">
-          <div class="mb-2">
-            @php
-              $stars = (float)($t['rating'] ?? 5);
-              $fullStars = floor($stars);
-              $halfStar = $stars - $fullStars >= 0.5;
-            @endphp
-            @for($s = 0; $s < $fullStars; $s++)
-              <i class="fas fa-star text-warning"></i>
-            @endfor
-            @if($halfStar)
-              <i class="fas fa-star-half-alt text-warning"></i>
-            @endif
+<section class="py-5" style="background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%); overflow:hidden;">
+  <div class="container">
+    <div class="text-center mb-5" data-aos="fade-up">
+      <div class="section-pill" style="background:rgba(255,255,255,0.1);color:#fff;border-color:rgba(255,255,255,0.2);">⭐ রিভিউ</div>
+      <h2 class="section-title" style="color:#fff;">ক্রেতাদের <span style="color:#f59e0b;">মতামত</span></h2>
+      <p class="section-subtitle" style="color:rgba(255,255,255,0.6);">হাজার হাজার সন্তুষ্ট ক্রেতা আমাদের বিশ্বাস করেন</p>
+    </div>
+  </div>
+
+  {{-- Infinite marquee carousel --}}
+  <div class="testimonial-marquee-wrapper" style="position:relative; overflow:hidden;">
+    <div class="testimonial-marquee-track" id="testimonialTrack">
+      @php $testimonials = $landingPage->testimonials; @endphp
+      {{-- Render twice for seamless loop --}}
+      @foreach([...$testimonials, ...$testimonials] as $t)
+      @php
+        $stars = (float)($t['rating'] ?? 5);
+        $fullStars = floor($stars);
+        $halfStar = $stars - $fullStars >= 0.5;
+      @endphp
+      <div class="testimonial-marquee-card">
+        <div style="margin-bottom:10px;">
+          @for($s = 0; $s < $fullStars; $s++)
+            <i class="fas fa-star text-warning" style="font-size:0.85rem;"></i>
+          @endfor
+          @if($halfStar)
+            <i class="fas fa-star-half-alt text-warning" style="font-size:0.85rem;"></i>
+          @endif
+        </div>
+        <p style="color:rgba(255,255,255,0.88); font-style:italic; font-size:0.92rem; line-height:1.6; flex-grow:1;">&ldquo;{{ $t['text'] ?? '' }}&rdquo;</p>
+        <div style="display:flex; align-items:center; gap:10px; margin-top:16px;">
+          <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#b33e0f,#f59e0b);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1rem;flex-shrink:0;">{{ mb_substr($t['author'] ?? 'ক', 0, 1) }}</div>
+          <div>
+            <div style="color:#fff; font-weight:600; font-size:0.88rem;">{{ $t['author'] ?? '' }}</div>
+            <div style="color:rgba(255,255,255,0.45); font-size:0.75rem;">যাচাইকৃত ক্রেতা ✓</div>
           </div>
-          <p class="mt-2">"{{ $t['text'] ?? '' }}"</p>
-          <small class="text-muted">– {{ $t['author'] ?? '' }}</small>
         </div>
       </div>
       @endforeach
     </div>
   </div>
+
+  <style>
+    .testimonial-marquee-wrapper { width: 100%; }
+    .testimonial-marquee-track {
+      display: flex;
+      gap: 20px;
+      padding: 10px 20px 20px;
+      width: max-content;
+      animation: marqueeScroll {{ max(20, count($testimonials) * 6) }}s linear infinite;
+    }
+    .testimonial-marquee-track:hover { animation-play-state: paused; }
+    .testimonial-marquee-card {
+      width: 300px;
+      min-height: 180px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      padding: 24px 22px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      backdrop-filter: blur(8px);
+      transition: transform 0.3s, background 0.3s;
+    }
+    .testimonial-marquee-card:hover {
+      background: rgba(255,255,255,0.12);
+      transform: translateY(-4px);
+    }
+    @keyframes marqueeScroll {
+      0%   { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    @media (max-width: 768px) {
+      .testimonial-marquee-card { width: 260px; padding: 18px 16px; }
+    }
+  </style>
 </section>
 @endif
 
@@ -719,10 +922,17 @@
 @if($landingPage->whatsapp_number)
 <div class="wa-sticky">
   <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $landingPage->whatsapp_number) }}?text={{ urlencode($landingPage->whatsapp_text ?? '') }}" target="_blank" class="text-white text-decoration-none d-flex align-items-center gap-2">
-    <i class="fab fa-whatsapp fa-xl"></i> <span>WhatsApp Order</span>
+    <i class="fab fa-whatsapp fa-xl"></i> <span class="d-none d-sm-inline">WhatsApp Order</span>
   </a>
 </div>
 @endif
+
+<!-- ======== FOOTER ======== -->
+<footer class="py-4 text-center text-muted" style="background-color: #f8f9fa; font-size: 0.9rem; border-top: 1px solid #e2e8f0;">
+  <div class="container">
+    <p class="mb-0">Developed by <a href="https://crownsit.com" target="_blank" style="color: #b33e0f; font-weight: bold; text-decoration: none;">Crowns IT</a></p>
+  </div>
+</footer>
 
 {{-- Variant data for JavaScript --}}
 @if($hasVariants)
@@ -740,12 +950,14 @@
   // ----- FORM & PRICING LOGIC -----
   (function(){
     let basePrice = {{ $newPrice }};
-    const baseOldPrice = {{ $oldPrice }};
+    let baseOldPrice = {{ $oldPrice }};
     const insideCharge = {{ $insideCharge }};
     const outsideCharge = {{ $outsideCharge }};
     const maxQty = 10;
     let currentQty = 1;
-    let shippingCost = insideCharge; // Default inside dhaka
+    let currentInsideCharge = insideCharge;
+    let currentOutsideCharge = outsideCharge;
+    let shippingCost = currentInsideCharge; // Default inside dhaka
 
     // Elements
     const qtyDisplay = document.getElementById('qtyDisplay');
@@ -828,9 +1040,9 @@
     deliveryRadios.forEach(radio => {
       radio.addEventListener('change', function() {
         if(this.value === 'inside') {
-          shippingCost = insideCharge;
+          shippingCost = currentInsideCharge;
         } else {
-          shippingCost = outsideCharge;
+          shippingCost = currentOutsideCharge;
         }
         updateUI();
       });
@@ -839,72 +1051,126 @@
     // Initialize UI
     updateUI();
 
-    // ===== VARIANT LOGIC =====
+    // ===== MULTI VARIANT LOGIC =====
     const variantDataEl = document.getElementById('variantData');
     const allVariants = variantDataEl ? JSON.parse(variantDataEl.textContent) : [];
-    const selectedVariantCombo = {}; // tracks user selection per attribute
-    let activeVariant = null;
+    let selectedSkus = [];
 
     function findMatchingVariant(sku) {
       if (!allVariants.length) return null;
       return allVariants.find(v => v.sku === sku) || null;
     }
 
-    function updateVariantState(sku) {
-      activeVariant = findMatchingVariant(sku);
-      // Update price if variant has its own price
-      if (activeVariant && activeVariant.price != null && activeVariant.price > 0) {
-        basePrice = parseFloat(activeVariant.price);
-        baseOldPrice = (activeVariant.old_price != null && activeVariant.old_price > 0) ? parseFloat(activeVariant.old_price) : (basePrice * 1.5);
-      } else {
+    function updateMultipleVariantState() {
+      const dropdownSelected = document.getElementById('variantDropdownSelected');
+      
+      if (selectedSkus.length === 0) {
         basePrice = {{ $newPrice }};
         baseOldPrice = {{ $oldPrice }};
+        currentInsideCharge = insideCharge;
+        currentOutsideCharge = outsideCharge;
+        
+        if (dropdownSelected) {
+          dropdownSelected.innerHTML = `
+           <div style="width:40px; height:40px; background:#f1f5f9; border-radius:8px; display:flex; align-items:center; justify-content:center;">
+             <i class="fas fa-box-open text-muted"></i>
+           </div>
+           <span class="text-muted fw-semibold">ভ্যারিয়েন্ট নির্বাচন করুন</span>
+          `;
+        }
+      } else {
+        basePrice = 0;
+        baseOldPrice = 0;
+        let maxInside = 0;
+        let maxOutside = 0;
+        
+        selectedSkus.forEach(sku => {
+          const v = findMatchingVariant(sku);
+          if (v) {
+            let p = (v.price != null && v.price > 0) ? parseFloat(v.price) : {{ $newPrice }};
+            basePrice += p;
+            baseOldPrice += (v.old_price != null && v.old_price > 0) ? parseFloat(v.old_price) : (p * 1.5);
+            
+            let ic = (v.inside_dhaka_charge != null) ? parseFloat(v.inside_dhaka_charge) : insideCharge;
+            let oc = (v.outside_dhaka_charge != null) ? parseFloat(v.outside_dhaka_charge) : outsideCharge;
+            if (ic > maxInside) maxInside = ic;
+            if (oc > maxOutside) maxOutside = oc;
+          }
+        });
+        
+        currentInsideCharge = maxInside || insideCharge;
+        currentOutsideCharge = maxOutside || outsideCharge;
+
+        if (dropdownSelected) {
+          if (selectedSkus.length === 1) {
+            const vItem = document.querySelector(`.variant-dropdown-item[data-sku="${selectedSkus[0]}"]`);
+            if (vItem) {
+              dropdownSelected.innerHTML = `
+                <img loading=" lazy\ src="${vItem.dataset.img}" style="width:40px; height:40px; object-fit:cover; border-radius:8px;">
+                <div>
+                  <div class="fw-bold" style="color:#0f172a; line-height:1.2;">${vItem.dataset.label}</div>
+                  <div class="text-accent small fw-semibold" style="line-height:1.2;">৳${totalPriceFormat(vItem.dataset.price)}</div>
+                </div>
+              `;
+            }
+          } else {
+            dropdownSelected.innerHTML = `
+              <div style="width:40px; height:40px; background:#fdf2ee; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#b33e0f; font-weight:bold; border:1px solid #f5cbb7;">
+                ${selectedSkus.length}
+              </div>
+              <div>
+                <div class="fw-bold" style="color:#0f172a; line-height:1.2;">${selectedSkus.length}টি নির্বাচিত</div>
+                <div class="text-accent small fw-semibold" style="line-height:1.2;">মোট: ৳${totalPriceFormat(basePrice)}</div>
+              </div>
+            `;
+          }
+        }
       }
-      // Update variant image preview
-      const imgPreview = document.getElementById('variantImagePreview');
-      const varImg = document.getElementById('variantImg');
-      if (imgPreview && varImg && activeVariant && activeVariant.image) {
-        varImg.src = '/storage/' + activeVariant.image;
-        imgPreview.classList.remove('d-none');
-      } else if (imgPreview) {
-        imgPreview.classList.add('d-none');
+
+      // Update Delivery Labels
+      const insideLabel = document.querySelector('label[for="insideDhaka"]');
+      const outsideLabel = document.querySelector('label[for="outsideDhaka"]');
+      if (insideLabel) insideLabel.textContent = 'ঢাকা সিটি (৳' + currentInsideCharge + ')';
+      if (outsideLabel) outsideLabel.textContent = 'ঢাকার বাইরে (৳' + currentOutsideCharge + ')';
+      
+      const selectedRadio = document.querySelector('input[name="delivery_area"]:checked');
+      if (selectedRadio && selectedRadio.value === 'inside') {
+        shippingCost = currentInsideCharge;
+      } else {
+        shippingCost = currentOutsideCharge;
       }
+      
       updateUI();
     }
 
-
-
-    // Dropdown Variant Selection
+    // Dropdown Checkbox Selection
     document.querySelectorAll('.variant-dropdown-item').forEach(function(item) {
       item.addEventListener('click', function(e) {
         e.preventDefault();
         const sku = this.dataset.sku;
-        const price = this.dataset.price;
-        const img = this.dataset.img;
-        const label = this.dataset.label;
-
-        // Update hidden input
-        document.getElementById('selectedVariantSku').value = sku;
+        const checkbox = this.querySelector('.variant-checkbox');
         
-        // Update Dropdown UI
-        document.getElementById('variantDropdownSelected').innerHTML = `
-          <img src="${img}" style="width:40px; height:40px; object-fit:cover; border-radius:8px;">
-          <div>
-            <div class="fw-bold" style="color:#0f172a; line-height:1.2;">${label}</div>
-            <div class="text-accent small fw-semibold" style="line-height:1.2;">৳${totalPriceFormat(price)}</div>
-          </div>
-        `;
+        if (selectedSkus.includes(sku)) {
+            selectedSkus = selectedSkus.filter(s => s !== sku);
+            if (checkbox) checkbox.checked = false;
+        } else {
+            selectedSkus.push(sku);
+            if (checkbox) checkbox.checked = true;
+        }
         
-        // Update Variant State and Price
-        updateVariantState(sku);
+        document.getElementById('selectedVariantSku').value = selectedSkus.join(',');
+        updateMultipleVariantState();
       });
     });
 
-    // Function to select variant from Showcase and scroll to form
+    // Selecting from Showcase grid
     window.selectVariantAndScroll = function(sku) {
       const dropdownItem = document.querySelector(`.variant-dropdown-item[data-sku="${sku}"]`);
       if (dropdownItem) {
-        dropdownItem.click();
+        const checkbox = dropdownItem.querySelector('.variant-checkbox');
+        if (checkbox && !checkbox.checked) {
+          dropdownItem.click();
+        }
       }
       document.getElementById('order').scrollIntoView({ behavior: 'smooth' });
     };
@@ -1026,14 +1292,19 @@
 
   // ----- TIMER (9 hours) -----
   (function(){
-    let expiry = localStorage.getItem("premium_five_offer_end");
-    if (!expiry) {
-      expiry = Date.now() + (9 * 60 * 60 * 1000);
-      localStorage.setItem("premium_five_offer_end", expiry);
-    } else { expiry = parseInt(expiry); }
+    const KEY = "lp_offer_end_{{ $landingPage->id ?? 0 }}";
+    let expiry = localStorage.getItem(KEY);
+    const now = Date.now();
+    // If no expiry, or it's already expired — reset to 9 hours from now
+    if (!expiry || parseInt(expiry) <= now) {
+      expiry = now + (9 * 60 * 60 * 1000);
+      localStorage.setItem(KEY, expiry);
+    } else {
+      expiry = parseInt(expiry);
+    }
     function update() {
       let rem = Math.max(0, expiry - Date.now());
-      if(document.getElementById("hours")) document.getElementById("hours").innerText   = String(Math.floor(rem / 3600000)).padStart(2,'0');
+      if(document.getElementById("hours"))   document.getElementById("hours").innerText   = String(Math.floor(rem / 3600000)).padStart(2,'0');
       if(document.getElementById("minutes")) document.getElementById("minutes").innerText = String(Math.floor((rem % 3600000) / 60000)).padStart(2,'0');
       if(document.getElementById("seconds")) document.getElementById("seconds").innerText = String(Math.floor((rem % 60000) / 1000)).padStart(2,'0');
     }
@@ -1044,7 +1315,9 @@
   // SMOOTH SCROLL
   document.querySelectorAll('a[href^="#"]').forEach(a => {
     a.addEventListener('click', function(e) {
-      const target = document.querySelector(this.getAttribute('href'));
+      const href = this.getAttribute('href');
+      if (href === '#') return; // Ignore empty anchors
+      const target = document.querySelector(href);
       if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
     });
   });

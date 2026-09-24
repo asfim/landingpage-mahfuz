@@ -114,6 +114,8 @@
                                 <th>SKU</th>
                                 <th>Old Price (৳)</th>
                                 <th>Sell Price (৳)</th>
+                                <th>Inside Dhaka (৳)</th>
+                                <th>Outside Dhaka (৳)</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -162,6 +164,18 @@
                                         class="form-control form-control-sm"
                                         value="{{ old("variant_prices.{$idx}.price", $savedVP['price'] ?? $defaultVariantSellPrice) }}"
                                         placeholder="যেমন: 999">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" min="0"
+                                        name="variant_prices[{{ $idx }}][inside_dhaka_charge]"
+                                        class="form-control form-control-sm"
+                                        value="{{ old("variant_prices.{$idx}.inside_dhaka_charge", $savedVP['inside_dhaka_charge'] ?? ($landingPage->inside_dhaka_charge ?? 60)) }}">
+                                </td>
+                                <td>
+                                    <input type="number" step="0.01" min="0"
+                                        name="variant_prices[{{ $idx }}][outside_dhaka_charge]"
+                                        class="form-control form-control-sm"
+                                        value="{{ old("variant_prices.{$idx}.outside_dhaka_charge", $savedVP['outside_dhaka_charge'] ?? ($landingPage->outside_dhaka_charge ?? 120)) }}">
                                 </td>
                             </tr>
                             @endforeach
@@ -235,22 +249,52 @@
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">Custom Landing Page Image <small class="text-muted">(Optional, falls back to product image)</small></label>
-                        <input type="file" name="image" class="form-control" accept="image/*" style="border-color: #a1a1a1 !important;">
+                        <input type="file" name="image" class="form-control" accept="image/*" style="border-color: #a1a1a1 !important;" id="heroImageInput">
+                        <div class="form-text text-muted">এই ছবিটি Landing Page-এর Hero Section-এ দেখাবে।</div>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <label class="form-label d-block">Current Preview</label>
-                        @if(isset($landingPage) && $landingPage->image)
-                            <img src="{{ asset('storage/' . $landingPage->image) }}" class="rounded border" style="height: 100px; object-fit: cover;">
-                        @elseif($product->image)
-                            <img src="{{ asset('storage/' . $product->image) }}" class="rounded border" style="height: 100px; object-fit: cover;">
-                            <div class="form-text text-muted">Currently using main product image</div>
-                        @else
-                            <div class="text-muted">No image uploaded</div>
-                        @endif
+                        <label class="form-label d-block">Preview</label>
+                        <div id="heroImagePreviewWrapper">
+                            @if(isset($landingPage) && $landingPage->image)
+                                <img id="heroImagePreview" src="{{ asset('storage/' . $landingPage->image) }}" class="rounded border" style="height: 150px; max-width: 100%; object-fit: cover;">
+                            @elseif($product->image)
+                                <img id="heroImagePreview" src="{{ asset('storage/' . $product->image) }}" class="rounded border" style="height: 150px; max-width: 100%; object-fit: cover;">
+                                <div class="form-text text-muted">Currently using main product image</div>
+                            @else
+                                <img id="heroImagePreview" src="" class="rounded border d-none" style="height: 150px; max-width: 100%; object-fit: cover;">
+                                <div id="noImageText" class="text-muted">No image uploaded</div>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        @push('scripts')
+        <script>
+            document.getElementById('heroImageInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        let preview = document.getElementById('heroImagePreview');
+                        if (!preview) {
+                            preview = document.createElement('img');
+                            preview.id = 'heroImagePreview';
+                            preview.className = 'rounded border';
+                            preview.style.cssText = 'height: 150px; max-width: 100%; object-fit: cover;';
+                            document.getElementById('heroImagePreviewWrapper').prepend(preview);
+                        }
+                        preview.src = event.target.result;
+                        preview.classList.remove('d-none');
+                        const noText = document.getElementById('noImageText');
+                        if (noText) noText.style.display = 'none';
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        </script>
+        @endpush
 
         <div class="card mb-4 border border-secondary border-opacity-25">
             <div class="card-header bg-light">
@@ -283,38 +327,110 @@
         </div>
 
         <div class="card mb-4 border border-secondary border-opacity-25">
-            <div class="card-header bg-light">
-                <h5 class="card-title mb-0">Testimonials (3 Items)</h5>
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Testimonials</h5>
+                <button type="button" class="btn btn-sm btn-success" id="addTestimonialBtn">
+                    <i class="fas fa-plus me-1"></i> Add Testimonial
+                </button>
             </div>
             <div class="card-body">
-                <div class="row">
-                    @for($i = 0; $i < 3; $i++)
-                        @php
-                            $testimonial = isset($landingPage) && !empty($landingPage->testimonials) ? ($landingPage->testimonials[$i] ?? null) : ($defaultTestimonials[$i] ?? null);
-                        @endphp
-                        <div class="col-md-4 mb-3">
-                            <h6 class="fw-bold mb-2">Testimonial #{{ $i + 1 }}</h6>
-                            <div class="mb-2">
-                                <label class="form-label small">Rating (Stars, e.g., 5)</label>
-                                <select name="testimonials[{{ $i }}][rating]" class="form-select form-select-sm" required>
-                                    @foreach(['5' => '5 Stars', '4.5' => '4.5 Stars', '4' => '4 Stars', '3.5' => '3.5 Stars', '3' => '3 Stars'] as $val => $lbl)
-                                        <option value="{{ $val }}" {{ old('testimonials.'.$i.'.rating', $testimonial['rating'] ?? '5') == $val ? 'selected' : '' }}>{{ $lbl }}</option>
+                <div id="testimonialsContainer">
+                    @php
+                        $existingTestimonials = isset($landingPage) && !empty($landingPage->testimonials)
+                            ? $landingPage->testimonials
+                            : ($defaultTestimonials ?? [['rating'=>'5','author'=>'','text'=>'']]);
+                    @endphp
+                    @foreach($existingTestimonials as $i => $testimonial)
+                    <div class="testimonial-row border rounded p-3 mb-3 position-relative" data-index="{{ $i }}">
+                        <button type="button" class="btn btn-sm btn-danger remove-testimonial position-absolute" style="top:8px;right:8px; width: 30px; height: 30px; padding: 0; line-height: 1; font-weight: bold; font-size: 1.2rem;">&times;</button>
+                        <div class="row">
+                            <div class="col-md-3 mb-2">
+                                <label class="form-label small fw-bold">Rating</label>
+                                <select name="testimonials[{{ $i }}][rating]" class="form-select form-select-sm">
+                                    @foreach(['5'=>'5 Stars','4.5'=>'4.5 Stars','4'=>'4 Stars','3.5'=>'3.5 Stars','3'=>'3 Stars'] as $val=>$lbl)
+                                        <option value="{{ $val }}" {{ ($testimonial['rating'] ?? '5') == $val ? 'selected' : '' }}>{{ $lbl }}</option>
                                     @endforeach
                                 </select>
                             </div>
-                            <div class="mb-2">
-                                <label class="form-label small">Author & Location</label>
-                                <input type="text" name="testimonials[{{ $i }}][author]" class="form-control form-control-sm" value="{{ old('testimonials.'.$i.'.author', $testimonial['author'] ?? '') }}" required style="border-color: #a1a1a1 !important;">
+                            <div class="col-md-4 mb-2">
+                                <label class="form-label small fw-bold">Author & Location</label>
+                                <input type="text" name="testimonials[{{ $i }}][author]" class="form-control form-control-sm" value="{{ $testimonial['author'] ?? '' }}" placeholder="যেমন: রহিম, ঢাকা" style="border-color:#a1a1a1!important;">
                             </div>
-                            <div>
-                                <label class="form-label small">Review Content</label>
-                                <textarea name="testimonials[{{ $i }}][text]" class="form-control form-control-sm" rows="3" required style="border-color: #a1a1a1 !important;">{{ old('testimonials.'.$i.'.text', $testimonial['text'] ?? '') }}</textarea>
+                            <div class="col-md-5 mb-2">
+                                <label class="form-label small fw-bold">Review Content</label>
+                                <textarea name="testimonials[{{ $i }}][text]" class="form-control form-control-sm" rows="2" placeholder="রিভিউ লিখুন..." style="border-color:#a1a1a1!important;">{{ $testimonial['text'] ?? '' }}</textarea>
                             </div>
                         </div>
-                    @endfor
+                    </div>
+                    @endforeach
                 </div>
             </div>
         </div>
+
+        @push('scripts')
+        <script>
+        (function() {
+            let testimonialCount = {{ count($existingTestimonials) }};
+
+            function ratingOptions(selected) {
+                const opts = {'5':'5 Stars','4.5':'4.5 Stars','4':'4 Stars','3.5':'3.5 Stars','3':'3 Stars'};
+                return Object.entries(opts).map(([v,l]) =>
+                    `<option value="${v}" ${v === selected ? 'selected' : ''}>${l}</option>`
+                ).join('');
+            }
+
+            document.getElementById('addTestimonialBtn').addEventListener('click', function() {
+                const idx = testimonialCount++;
+                const html = `
+                <div class="testimonial-row border rounded p-3 mb-3 position-relative" data-index="${idx}">
+                    <button type="button" class="btn btn-sm btn-danger remove-testimonial position-absolute" style="top:8px;right:8px; width: 30px; height: 30px; padding: 0; line-height: 1; font-weight: bold; font-size: 1.2rem;">&times;</button>
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label small fw-bold">Rating</label>
+                            <select name="testimonials[${idx}][rating]" class="form-select form-select-sm">
+                                ${ratingOptions('5')}
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <label class="form-label small fw-bold">Author & Location</label>
+                            <input type="text" name="testimonials[${idx}][author]" class="form-control form-control-sm" placeholder="যেমন: রহিম, ঢাকা" style="border-color:#a1a1a1!important;">
+                        </div>
+                        <div class="col-md-5 mb-2">
+                            <label class="form-label small fw-bold">Review Content</label>
+                            <textarea name="testimonials[${idx}][text]" class="form-control form-control-sm" rows="2" placeholder="রিভিউ লিখুন..." style="border-color:#a1a1a1!important;"></textarea>
+                        </div>
+                    </div>
+                </div>`;
+                document.getElementById('testimonialsContainer').insertAdjacentHTML('beforeend', html);
+                attachRemoveListeners();
+            });
+
+            function attachRemoveListeners() {
+                document.querySelectorAll('.remove-testimonial').forEach(btn => {
+                    btn.onclick = function() {
+                        if (document.querySelectorAll('.testimonial-row').length > 1) {
+                            btn.closest('.testimonial-row').remove();
+                            reIndexTestimonials();
+                        } else {
+                            alert('কমপক্ষে একটি testimonial রাখতে হবে।');
+                        }
+                    };
+                });
+            }
+
+            function reIndexTestimonials() {
+                document.querySelectorAll('.testimonial-row').forEach((row, newIdx) => {
+                    row.dataset.index = newIdx;
+                    row.querySelectorAll('[name]').forEach(el => {
+                        el.name = el.name.replace(/testimonials\[\d+\]/, `testimonials[${newIdx}]`);
+                    });
+                });
+            }
+
+            attachRemoveListeners();
+        })();
+        </script>
+        @endpush
 
         <div class="card mb-4 border border-secondary border-opacity-25">
             <div class="card-header bg-light">

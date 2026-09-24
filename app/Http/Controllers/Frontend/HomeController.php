@@ -27,15 +27,20 @@ class HomeController extends Controller
         $products = Product::frontendActive()
             ->where('name', 'like', '%'.$query.'%')
             ->take(5)
-            ->get(['id', 'name', 'price', 'slug', 'image']);
+            ->get(['id', 'name', 'price', 'slug', 'image', 'variants']);
 
         $formatted = $products->map(function ($product) {
+            $imagePath = $product->image;
+            if (! $imagePath && ! empty($product->variants) && is_array($product->variants)) {
+                $imagePath = $product->variants[0]['image'] ?? null;
+            }
+
             return [
                 'id' => $product->id,
                 'name' => $product->name,
                 'price' => number_format($product->price, 2),
                 'url' => route('product.details', $product->slug),
-                'image' => $product->image ? asset('storage/'.$product->image) : 'https://placehold.co/50x50/eee/aaa?text=No+Img',
+                'image' => $imagePath ? asset('storage/'.$imagePath) : 'https://placehold.co/50x50/eee/aaa?text=No+Img',
             ];
         });
 
@@ -70,27 +75,29 @@ class HomeController extends Controller
             ->get();
         $discountedProducts = Product::frontendActive()
             ->where(function ($q) {
-                $q->where(function($sq) {
+                $q->where(function ($sq) {
                     $sq->whereNotNull('discount_type')
-                       ->where('discount_value', '>', 0);
+                        ->where('discount_value', '>', 0);
                 })
-                ->orWhere('variants', 'LIKE', '%"discount":"%')
-                ->orWhere('variants', 'LIKE', '%"discount": %')
-                ->orWhere('variants', 'LIKE', '%"discount":1%')
-                ->orWhere('variants', 'LIKE', '%"discount":2%')
-                ->orWhere('variants', 'LIKE', '%"discount":3%')
-                ->orWhere('variants', 'LIKE', '%"discount":4%')
-                ->orWhere('variants', 'LIKE', '%"discount":5%')
-                ->orWhere('variants', 'LIKE', '%"discount":6%')
-                ->orWhere('variants', 'LIKE', '%"discount":7%')
-                ->orWhere('variants', 'LIKE', '%"discount":8%')
-                ->orWhere('variants', 'LIKE', '%"discount":9%');
+                    ->orWhere('variants', 'LIKE', '%"discount":"%')
+                    ->orWhere('variants', 'LIKE', '%"discount": %')
+                    ->orWhere('variants', 'LIKE', '%"discount":1%')
+                    ->orWhere('variants', 'LIKE', '%"discount":2%')
+                    ->orWhere('variants', 'LIKE', '%"discount":3%')
+                    ->orWhere('variants', 'LIKE', '%"discount":4%')
+                    ->orWhere('variants', 'LIKE', '%"discount":5%')
+                    ->orWhere('variants', 'LIKE', '%"discount":6%')
+                    ->orWhere('variants', 'LIKE', '%"discount":7%')
+                    ->orWhere('variants', 'LIKE', '%"discount":8%')
+                    ->orWhere('variants', 'LIKE', '%"discount":9%');
             })
             ->withAvg('reviews', 'rating')
             ->withCount('reviews')
             ->latest()
             ->get()
-            ->filter(function($p) { return $p->has_any_discount; })
+            ->filter(function ($p) {
+                return $p->has_any_discount;
+            })
             ->take(5);
         $newArrivalProducts = Product::frontendActive()
             ->where('is_new_arrival', true)
@@ -220,7 +227,7 @@ class HomeController extends Controller
 
         // Sort
         $sort = $request->query('sort', '');
-        
+
         $priceExpression = "
             CASE 
                 WHEN discount_type = 'percent' AND discount_value > 0 THEN price - (price * (discount_value / 100))
@@ -256,14 +263,15 @@ class HomeController extends Controller
             $html = '';
             foreach ($products as $product) {
                 $html .= '<div class="col-6 col-md-4 col-lg-3">'
-                    . view('frontend.partials.category_product_card', compact('product'))->render()
-                    . '</div>';
+                    .view('frontend.partials.category_product_card', compact('product'))->render()
+                    .'</div>';
             }
+
             return response()->json([
-                'html'       => $html,
+                'html' => $html,
                 'pagination' => (string) $products->links(),
-                'total'      => $products->total(),
-                'has_more'   => $products->hasMorePages(),
+                'total' => $products->total(),
+                'has_more' => $products->hasMorePages(),
             ]);
         }
 
@@ -321,7 +329,7 @@ class HomeController extends Controller
         }
 
         $products = $query->paginate(12)->withQueryString();
-        
+
         $categories = Category::where('is_active', true)->orderBy('name')->get();
 
         return view('shop', compact('products', 'categories'));
@@ -331,28 +339,28 @@ class HomeController extends Controller
     {
         $products = Product::frontendActive()
             ->where(function ($q) {
-                $q->where(function($sq) {
+                $q->where(function ($sq) {
                     $sq->whereNotNull('discount_type')
-                       ->where('discount_value', '>', 0);
+                        ->where('discount_value', '>', 0);
                 })
-                ->orWhere('variants', 'LIKE', '%"discount":"1%')
-                ->orWhere('variants', 'LIKE', '%"discount":"2%')
-                ->orWhere('variants', 'LIKE', '%"discount":"3%')
-                ->orWhere('variants', 'LIKE', '%"discount":"4%')
-                ->orWhere('variants', 'LIKE', '%"discount":"5%')
-                ->orWhere('variants', 'LIKE', '%"discount":"6%')
-                ->orWhere('variants', 'LIKE', '%"discount":"7%')
-                ->orWhere('variants', 'LIKE', '%"discount":"8%')
-                ->orWhere('variants', 'LIKE', '%"discount":"9%')
-                ->orWhere('variants', 'LIKE', '%"discount":1%')
-                ->orWhere('variants', 'LIKE', '%"discount":2%')
-                ->orWhere('variants', 'LIKE', '%"discount":3%')
-                ->orWhere('variants', 'LIKE', '%"discount":4%')
-                ->orWhere('variants', 'LIKE', '%"discount":5%')
-                ->orWhere('variants', 'LIKE', '%"discount":6%')
-                ->orWhere('variants', 'LIKE', '%"discount":7%')
-                ->orWhere('variants', 'LIKE', '%"discount":8%')
-                ->orWhere('variants', 'LIKE', '%"discount":9%');
+                    ->orWhere('variants', 'LIKE', '%"discount":"1%')
+                    ->orWhere('variants', 'LIKE', '%"discount":"2%')
+                    ->orWhere('variants', 'LIKE', '%"discount":"3%')
+                    ->orWhere('variants', 'LIKE', '%"discount":"4%')
+                    ->orWhere('variants', 'LIKE', '%"discount":"5%')
+                    ->orWhere('variants', 'LIKE', '%"discount":"6%')
+                    ->orWhere('variants', 'LIKE', '%"discount":"7%')
+                    ->orWhere('variants', 'LIKE', '%"discount":"8%')
+                    ->orWhere('variants', 'LIKE', '%"discount":"9%')
+                    ->orWhere('variants', 'LIKE', '%"discount":1%')
+                    ->orWhere('variants', 'LIKE', '%"discount":2%')
+                    ->orWhere('variants', 'LIKE', '%"discount":3%')
+                    ->orWhere('variants', 'LIKE', '%"discount":4%')
+                    ->orWhere('variants', 'LIKE', '%"discount":5%')
+                    ->orWhere('variants', 'LIKE', '%"discount":6%')
+                    ->orWhere('variants', 'LIKE', '%"discount":7%')
+                    ->orWhere('variants', 'LIKE', '%"discount":8%')
+                    ->orWhere('variants', 'LIKE', '%"discount":9%');
             })
             ->withAvg('reviews', 'rating')
             ->withCount('reviews')
