@@ -344,12 +344,10 @@
                 @if($item->product_image)
                   <img src="{{ str_starts_with($item->product_image, 'http') ? $item->product_image : asset('storage/' . $item->product_image) }}" class="item-img" alt="{{ $item->product_name }}">
                 @endif
-                <span class="item-name">{{ $item->product_name }}</span>
                 @if(is_array($item->variants) && count($item->variants) > 0)
-                  <br>
-                  <span class="item-variant">
-                    {{ collect($item->variants)->map(fn($v, $k) => ucfirst($k) . ': ' . $v)->join(' · ') }}
-                  </span>
+                  <span class="item-name">{{ $item->formatted_variants }}</span>
+                @else
+                  <span class="item-name">{{ $item->product_name }}</span>
                 @endif
               </td>
               <td>{{ $item->quantity }}</td>

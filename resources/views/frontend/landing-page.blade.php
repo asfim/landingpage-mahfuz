@@ -1214,9 +1214,13 @@
           return;
         }
         
-        if (activeVariant && activeVariant.sku) {
-          variants = Object.assign({}, activeVariant.combo);
-          variants._sku = activeVariant.sku;
+        if (selectedSkus.length > 0) {
+          variants = selectedSkus.map(s => {
+            let v = findMatchingVariant(s);
+            let vObj = v ? Object.assign({}, v.combo) : {};
+            vObj._sku = s;
+            return vObj;
+          });
         }
       }
 

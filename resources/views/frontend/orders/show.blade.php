@@ -58,12 +58,13 @@
                 @endif
               </td>
               <td>
-                <div class="fw-bold">{{ $item->product_name }}</div>
-                @if(is_array($item->variants) && count($item->variants) > 0)
-                  <small class="text-muted">
-                    {{ collect($item->variants)->map(fn($v, $k) => ucfirst($k) . ': ' . $v)->join(' · ') }}
-                  </small>
-                @endif
+                <div class="fw-bold">
+                  @if(is_array($item->variants) && count($item->variants) > 0)
+                    {{ $item->formatted_variants }}
+                  @else
+                    {{ $item->product_name }}
+                  @endif
+                </div>
               </td>
               <td class="text-center">{{ $item->quantity }}</td>
               <td>৳{{ number_format($item->price, 2) }}</td>

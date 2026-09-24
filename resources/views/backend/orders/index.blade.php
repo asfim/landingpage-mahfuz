@@ -149,8 +149,14 @@
                         <td>{{ $loop->iteration }}</td>
                         <td>
                             @foreach ($order->items as $item)
-                                <div class="small fw-semibold text-wrap">{{ $item->product_name }} <span
-                                        class="text-muted">(x{{ $item->quantity }})</span></div>
+                                <div class="small fw-semibold text-wrap">
+                                    @if (is_array($item->variants) && count($item->variants) > 0)
+                                        {{ $item->formatted_variants }}
+                                    @else
+                                        {{ $item->product_name }}
+                                    @endif
+                                    <span class="text-muted">(x{{ $item->quantity }})</span>
+                                </div>
                             @endforeach
                         </td>
                         <td>{{ $order->customer_name }}</td>

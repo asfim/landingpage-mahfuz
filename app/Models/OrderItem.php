@@ -43,4 +43,37 @@ class OrderItem extends Model
     {
         return $this->belongsTo(Product::class);
     }
+
+    public function getFormattedVariantsAttribute(): string
+    {
+        $vars = $this->variants;
+        if (!is_array($vars) || empty($vars)) {
+            return '';
+        }
+
+        $formatted = [];
+        if (array_is_list($vars)) {
+            foreach ($vars as $vArr) {
+                if (is_array($vArr)) {
+                    $temp = [];
+                    foreach ($vArr as $k => $v) {
+                        if ($k !== '_sku' && !is_array($v)) {
+                            $temp[] = ucfirst($k) . ': ' . $v;
+                        }
+                    }
+                    if (!empty($temp)) {
+                        $formatted[] = '[' . implode(', ', $temp) . ']';
+                    }
+                }
+            }
+        } else {
+            foreach ($vars as $k => $v) {
+                if ($k !== '_sku' && !is_array($v)) {
+                    $formatted[] = ucfirst($k) . ': ' . $v;
+                }
+            }
+        }
+
+        return implode(' · ', $formatted);
+    }
 }

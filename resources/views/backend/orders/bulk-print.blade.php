@@ -248,13 +248,10 @@
               @foreach($order->items as $item)
                 <tr>
                   <td>
-                    <div class="item-name">{{ $item->product_name }}</div>
                     @if($item->variants && count($item->variants) > 0)
-                      <div class="item-variant">
-                        @foreach($item->variants as $k => $v)
-                          {{ ucfirst($k) }}: {{ $v }} &nbsp;
-                        @endforeach
-                      </div>
+                      <div class="item-name">{{ $item->formatted_variants }}</div>
+                    @else
+                      <div class="item-name">{{ $item->product_name }}</div>
                     @endif
                   </td>
                   <td style="text-align: center;">৳{{ number_format($item->price, 2) }}</td>
