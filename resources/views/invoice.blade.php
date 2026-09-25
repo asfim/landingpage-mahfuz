@@ -397,3 +397,38 @@
   </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+window.dataLayer = window.dataLayer || [];
+dataLayer.push({
+  event: "purchase",
+  user_data: {
+    email: "{{ $order->user->email ?? '' }}",
+    phone_number: "{{ $order->customer_phone ?? '' }}",
+    address: {
+      first_name: "{{ $order->customer_name ?? '' }}",
+      street: "{{ $order->customer_address ?? '' }}"
+    }
+  },
+  ecommerce: {
+    transaction_id: "{{ $order->invoice_no }}",
+    value: {{ $order->total }},
+    tax: {{ $order->tax }},
+    shipping: {{ $order->shipping_cost }},
+    currency: "BDT",
+    coupon: "{{ $order->coupon_code ?? '' }}",
+    items: [
+      @foreach($order->items as $index => $item)
+      {
+        item_name: "{{ $item->product_name }}",
+        item_id: "{{ $item->product_id }}",
+        price: {{ $item->price }},
+        quantity: {{ $item->quantity }}
+      }{{ $loop->last ? '' : ',' }}
+      @endforeach
+    ]
+  }
+});
+</script>
+@endpush

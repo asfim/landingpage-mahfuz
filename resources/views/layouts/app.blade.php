@@ -8,6 +8,9 @@
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-MDW3NL6');</script>
     <!-- End Google Tag Manager -->
+    @if(session()->has('landing_page_header_script'))
+        {!! session('landing_page_header_script') !!}
+    @endif
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -33,6 +36,9 @@
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MDW3NL6"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
+    @if(session()->has('landing_page_body_script'))
+        {!! session('landing_page_body_script') !!}
+    @endif
 
     @include('layouts.header.header')
 

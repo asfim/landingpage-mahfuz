@@ -32,6 +32,7 @@ class OrderController extends Controller
             'tax' => 'required|numeric|min:0',
             'total' => 'required|numeric|min:0',   // may be overridden
             'coupon_code' => 'nullable|string',
+            'landing_page_id' => 'nullable|integer',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'nullable|integer',
             'items.*.product_name' => 'required|string|max:255',
@@ -93,6 +94,15 @@ class OrderController extends Controller
 
             return $order;
         });
+
+        // Flash landing page custom scripts if present
+        if (!empty($validated['landing_page_id'])) {
+            $lp = \App\Models\ProductLandingPage::find($validated['landing_page_id']);
+            if ($lp) {
+                if ($lp->header_script) session()->flash('landing_page_header_script', $lp->header_script);
+                if ($lp->body_script) session()->flash('landing_page_body_script', $lp->body_script);
+            }
+        }
 
         // Post-order actions: handle payment gateway
         try {

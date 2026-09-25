@@ -1332,6 +1332,7 @@
           subtotal: subtotal,
           tax: 0,
           total: total,
+          landing_page_id: {{ $landingPage->id ?? 'null' }},
           items: [{
             product_id: {{ $product->id }},
             product_name: "{{ $product->name }}",
@@ -1399,6 +1400,25 @@
       if (target) { e.preventDefault(); target.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
     });
   });
+</script>
+
+<script>
+window.dataLayer = window.dataLayer || [];
+dataLayer.push({
+  event: "view_item",
+  ecommerce: {
+    currency: "BDT",
+    value: {{ $newPrice ?? 0 }},
+    items: [
+      {
+        item_id: "{{ $product->id }}",
+        item_name: "{{ $product->name }}",
+        price: {{ $newPrice ?? 0 }},
+        quantity: 1
+      }
+    ]
+  }
+});
 </script>
 </body>
 </html>
