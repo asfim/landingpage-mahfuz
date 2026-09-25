@@ -74,11 +74,45 @@
       color: #fff;
       box-shadow: 0 10px 22px -8px rgba(179,62,15,0.4);
       transition: all 0.25s ease;
+      font-size: 1rem;
     }
     .btn-accent:hover {
       transform: scale(1.03) translateY(-3px);
       box-shadow: 0 18px 30px -10px rgba(179,62,15,0.6);
       color: #fff;
+    }
+    @media (max-width: 767.98px) {
+      .btn-accent {
+        display: block !important;
+        width: 100% !important;
+        padding: 16px 24px;
+        font-size: 1.1rem;
+        border-radius: 16px;
+        text-align: center;
+        animation: ctaPulse 2s ease-in-out infinite;
+      }
+      .btn-accent:hover {
+        transform: none;
+        animation: none;
+      }
+    }
+    @keyframes ctaPulse {
+      0%, 100% { box-shadow: 0 10px 22px -8px rgba(179,62,15,0.4); }
+      50%       { box-shadow: 0 14px 32px -4px rgba(179,62,15,0.65); transform: translateY(-2px); }
+    }
+    /* Order Submit Button */
+    .order-submit-btn {
+      border-radius: 60px;
+      font-size: 1.05rem;
+      letter-spacing: 0.3px;
+    }
+    @media (max-width: 767.98px) {
+      .order-submit-btn {
+        border-radius: 16px !important;
+        font-size: 1.15rem;
+        padding: 18px 16px !important;
+        animation: ctaPulse 2s ease-in-out infinite;
+      }
     }
     .btn-outline-premium {
       background: transparent;
@@ -386,6 +420,86 @@
       transform: translateY(-5px);
       box-shadow: 0 18px 44px rgba(0,0,0,0.12), 0 4px 14px rgba(179,62,15,0.07) !important;
     }
+    /* ===== VARIANT INLINE CARDS ===== */
+    .variant-inline-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 10px;
+    }
+    .variant-inline-card {
+      position: relative;
+      border: 2px solid #e2e8f0;
+      border-radius: 14px;
+      padding: 10px;
+      cursor: pointer;
+      background: #fff;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 6px;
+    }
+    .variant-inline-card:hover {
+      border-color: #b33e0f;
+      box-shadow: 0 4px 16px rgba(179,62,15,0.12);
+      transform: translateY(-2px);
+    }
+    .variant-inline-card.selected {
+      border-color: #b33e0f;
+      background: #fff8f5;
+      box-shadow: 0 4px 18px rgba(179,62,15,0.18);
+    }
+    .variant-inline-check {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: transparent;
+      transition: all 0.2s;
+    }
+    .variant-inline-card.selected .variant-inline-check {
+      background: #b33e0f;
+      color: #fff;
+    }
+    .variant-inline-img {
+      width: 56px;
+      height: 56px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid #f1f5f9;
+    }
+    .variant-inline-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #1a2535;
+      line-height: 1.2;
+    }
+    .variant-inline-price {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #b33e0f;
+    }
+    .variant-required-error .variant-inline-card {
+      border-color: #ef4444 !important;
+      animation: variantShake 0.4s ease;
+    }
+    @keyframes variantShake {
+      0%,100% { transform: translateX(0); }
+      20%,60% { transform: translateX(-4px); }
+      40%,80% { transform: translateX(4px); }
+    }
+    @media (max-width: 576px) {
+      .variant-inline-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+      .variant-inline-img { width: 44px; height: 44px; }
+    }
   </style>
   {!! $landingPage->header_script ?? '' !!}
 </head>
@@ -666,7 +780,7 @@
           </div>
 
           <p class="text-muted mt-3 justify-content-center justify-content-md-start"><i class="fas fa-box-open me-1"></i> <span id="stockMsg">{{ $landingPage->stock_text ?? 'মাত্র ২৫টি প্যাকেজ বাকি' }}</span></p>
-          <a href="#order" class="btn btn-accent btn-lg px-5 mt-2"><i class="fas fa-lock me-2"></i> <span id="ctaPrice">৳{{ number_format($newPrice, 0, '.', '') }}</span> এ অর্ডার করুন</a>
+          <a href="#order" class="btn btn-accent btn-lg mt-3"><i class="fas fa-lock me-2"></i> <span id="ctaPrice">৳{{ number_format($newPrice, 0, '.', '') }}</span> এ অর্ডার করুন</a>
         </div>
       </div>
     </div>
@@ -741,44 +855,35 @@
                     <h5 class="fw-bold mb-3 pb-2" style="border-bottom:2px solid #f1f5f9;">📋 অর্ডার সামারি</h5>
 
                     @if($hasVariants)
-                    {{-- Selected Variant Display / Dropdown --}}
-                    <div class="mb-4">
+                    {{-- Inline Variant Cards --}}
+                    <div class="mb-4" id="variantPickerSection">
                       <label class="form-label fw-semibold">আপনার পছন্দের ভ্যারিয়েন্ট <span class="text-danger">*</span></label>
                       <input type="hidden" name="variant_sku" id="selectedVariantSku" value="">
-                      <div class="dropdown w-100">
-                        <button class="btn btn-outline-secondary w-100 text-start d-flex align-items-center justify-content-between p-2" type="button" id="variantDropdownBtn" data-bs-toggle="dropdown" aria-expanded="false" data-bs-auto-close="outside" style="border-radius:12px; border-color:#cbd5e1; background:#fff;">
-                          <div class="d-flex align-items-center gap-3" id="variantDropdownSelected">
-                            <div style="width:40px; height:40px; background:#f1f5f9; border-radius:8px; display:flex; align-items:center; justify-content:center;">
-                              <i class="fas fa-box-open text-muted"></i>
+                      <div class="variant-inline-grid" id="variantInlineGrid">
+                        @foreach($productVariants as $idx => $variant)
+                          @php
+                            $sku = $variant['sku'] ?? 'v-'.$idx;
+                            $comboLabel = implode(', ', array_map(fn($k,$v) => strtoupper($k).': '.strtoupper($v), array_keys($variant['combo'] ?? []), array_values($variant['combo'] ?? [])));
+                            $vPrice = !empty($variant['price']) && $variant['price'] > 0 ? $variant['price'] : $effectiveProductPrice;
+                            $vImage = !empty($variant['image']) ? asset('storage/'.$variant['image']) : 'https://placehold.co/400x400/eee/aaa?text=No+Img';
+                            $vInsideCharge = $variant['inside_dhaka_charge'] ?? $insideCharge;
+                            $vOutsideCharge = $variant['outside_dhaka_charge'] ?? $outsideCharge;
+                          @endphp
+                          <div class="variant-inline-card variant-dropdown-item"
+                               data-sku="{{ $sku }}"
+                               data-price="{{ $vPrice }}"
+                               data-img="{{ $vImage }}"
+                               data-label="{{ $comboLabel }}"
+                               data-inside-charge="{{ $vInsideCharge }}"
+                               data-outside-charge="{{ $vOutsideCharge }}">
+                            <div class="variant-inline-check"><i class="fas fa-check"></i></div>
+                            <img loading="lazy" src="{{ $vImage }}" alt="{{ $comboLabel }}" class="variant-inline-img">
+                            <div class="variant-inline-info">
+                              <div class="variant-inline-label">{{ $comboLabel }}</div>
+                              <div class="variant-inline-price">৳{{ number_format($vPrice, 0, '.', '') }}</div>
                             </div>
-                            <span class="text-muted fw-semibold">ভ্যারিয়েন্ট নির্বাচন করুন</span>
                           </div>
-                          <i class="fas fa-chevron-down text-muted"></i>
-                        </button>
-                        <ul class="dropdown-menu w-100 shadow-lg border-0 mt-1 p-2" aria-labelledby="variantDropdownBtn" style="border-radius:16px; max-height:300px; overflow-y:auto;">
-                          @foreach($productVariants as $idx => $variant)
-                            @php
-                              $sku = $variant['sku'] ?? 'v-'.$idx;
-                              $comboLabel = implode(', ', array_map(fn($k,$v) => strtoupper($k).': '.strtoupper($v), array_keys($variant['combo'] ?? []), array_values($variant['combo'] ?? [])));
-                              $vPrice = !empty($variant['price']) && $variant['price'] > 0 ? $variant['price'] : $effectiveProductPrice;
-                              $vImage = !empty($variant['image']) ? asset('storage/'.$variant['image']) : 'https://placehold.co/400x400/eee/aaa?text=No+Img';
-                              $vInsideCharge = $variant['inside_dhaka_charge'] ?? $insideCharge;
-                              $vOutsideCharge = $variant['outside_dhaka_charge'] ?? $outsideCharge;
-                            @endphp
-                            <li>
-                              <a class="dropdown-item d-flex align-items-center gap-3 p-2 rounded variant-dropdown-item" href="#" data-sku="{{ $sku }}" data-price="{{ $vPrice }}" data-img="{{ $vImage }}" data-label="{{ $comboLabel }}" data-inside-charge="{{ $vInsideCharge }}" data-outside-charge="{{ $vOutsideCharge }}" style="transition:background 0.2s;">
-                                <div class="form-check m-0 pointer-events-none">
-                                  <input class="form-check-input variant-checkbox" type="checkbox" value="{{ $sku }}" style="pointer-events:none; border: 2px solid #94a3b8; width: 1.2rem; height: 1.2rem;">
-                                </div>
-                                <img loading="lazy" src="{{ $vImage }}" alt="{{ $comboLabel }}" style="width:40px; height:40px; object-fit:cover; border-radius:8px;">
-                                <div class="flex-grow-1">
-                                  <div class="fw-bold">{{ $comboLabel }}</div>
-                                  <div class="text-accent fw-semibold small">৳{{ number_format($vPrice, 0, '.', '') }}</div>
-                                </div>
-                              </a>
-                            </li>
-                          @endforeach
-                        </ul>
+                        @endforeach
                       </div>
                     </div>
                     @endif
@@ -818,7 +923,7 @@
                       <span class="fw-bold text-danger">৳<span id="summaryTotal">{{ $newPrice + $insideCharge }}</span></span>
                     </div>
 
-                    <button type="submit" class="btn btn-accent w-100 py-3" style="border-radius: 60px;"><i class="fas fa-check-circle me-2"></i> অর্ডার কনফর্ম করুন</button>
+                    <button type="submit" class="btn btn-accent w-100 py-3 order-submit-btn" id="orderSubmitBtn"><i class="fas fa-check-circle me-2"></i> অর্ডার কনফর্ম করুন</button>
                   </div>
                 </div>
               </div>
@@ -944,6 +1049,7 @@
 <!-- ======== SCRIPTS ======== -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
   AOS.init({ once: true, duration: 900, easing: 'ease-out-quad' });
 
@@ -1062,22 +1168,11 @@
     }
 
     function updateMultipleVariantState() {
-      const dropdownSelected = document.getElementById('variantDropdownSelected');
-      
       if (selectedSkus.length === 0) {
         basePrice = {{ $newPrice }};
         baseOldPrice = {{ $oldPrice }};
         currentInsideCharge = insideCharge;
         currentOutsideCharge = outsideCharge;
-        
-        if (dropdownSelected) {
-          dropdownSelected.innerHTML = `
-           <div style="width:40px; height:40px; background:#f1f5f9; border-radius:8px; display:flex; align-items:center; justify-content:center;">
-             <i class="fas fa-box-open text-muted"></i>
-           </div>
-           <span class="text-muted fw-semibold">ভ্যারিয়েন্ট নির্বাচন করুন</span>
-          `;
-        }
       } else {
         basePrice = 0;
         baseOldPrice = 0;
@@ -1100,31 +1195,6 @@
         
         currentInsideCharge = maxInside || insideCharge;
         currentOutsideCharge = maxOutside || outsideCharge;
-
-        if (dropdownSelected) {
-          if (selectedSkus.length === 1) {
-            const vItem = document.querySelector(`.variant-dropdown-item[data-sku="${selectedSkus[0]}"]`);
-            if (vItem) {
-              dropdownSelected.innerHTML = `
-                <img loading=" lazy\ src="${vItem.dataset.img}" style="width:40px; height:40px; object-fit:cover; border-radius:8px;">
-                <div>
-                  <div class="fw-bold" style="color:#0f172a; line-height:1.2;">${vItem.dataset.label}</div>
-                  <div class="text-accent small fw-semibold" style="line-height:1.2;">৳${totalPriceFormat(vItem.dataset.price)}</div>
-                </div>
-              `;
-            }
-          } else {
-            dropdownSelected.innerHTML = `
-              <div style="width:40px; height:40px; background:#fdf2ee; border-radius:8px; display:flex; align-items:center; justify-content:center; color:#b33e0f; font-weight:bold; border:1px solid #f5cbb7;">
-                ${selectedSkus.length}
-              </div>
-              <div>
-                <div class="fw-bold" style="color:#0f172a; line-height:1.2;">${selectedSkus.length}টি নির্বাচিত</div>
-                <div class="text-accent small fw-semibold" style="line-height:1.2;">মোট: ৳${totalPriceFormat(basePrice)}</div>
-              </div>
-            `;
-          }
-        }
       }
 
       // Update Delivery Labels
@@ -1143,34 +1213,35 @@
       updateUI();
     }
 
-    // Dropdown Checkbox Selection
-    document.querySelectorAll('.variant-dropdown-item').forEach(function(item) {
-      item.addEventListener('click', function(e) {
+    // Inline Card Selection
+    document.querySelectorAll('.variant-inline-card').forEach(function(card) {
+      card.addEventListener('click', function(e) {
         e.preventDefault();
         const sku = this.dataset.sku;
-        const checkbox = this.querySelector('.variant-checkbox');
         
         if (selectedSkus.includes(sku)) {
-            selectedSkus = selectedSkus.filter(s => s !== sku);
-            if (checkbox) checkbox.checked = false;
+          selectedSkus = selectedSkus.filter(s => s !== sku);
+          this.classList.remove('selected');
         } else {
-            selectedSkus.push(sku);
-            if (checkbox) checkbox.checked = true;
+          selectedSkus.push(sku);
+          this.classList.add('selected');
         }
         
         document.getElementById('selectedVariantSku').value = selectedSkus.join(',');
+        
+        // Remove error highlight on any selection
+        const grid = document.getElementById('variantInlineGrid');
+        if (grid) grid.classList.remove('variant-required-error');
+        
         updateMultipleVariantState();
       });
     });
 
     // Selecting from Showcase grid
     window.selectVariantAndScroll = function(sku) {
-      const dropdownItem = document.querySelector(`.variant-dropdown-item[data-sku="${sku}"]`);
-      if (dropdownItem) {
-        const checkbox = dropdownItem.querySelector('.variant-checkbox');
-        if (checkbox && !checkbox.checked) {
-          dropdownItem.click();
-        }
+      const card = document.querySelector(`.variant-inline-card[data-sku="${sku}"]`);
+      if (card && !selectedSkus.includes(sku)) {
+        card.click();
       }
       document.getElementById('order').scrollIntoView({ behavior: 'smooth' });
     };
@@ -1198,17 +1269,20 @@
       if (allVariants.length) {
         const sku = document.getElementById('selectedVariantSku').value;
         if (!sku) {
-          alert('অনুগ্রহ করে আপনার পছন্দের ভ্যারিয়েন্ট বেছে নিন।');
+          Swal.fire({
+            icon: 'warning',
+            title: 'ভ্যারিয়েন্ট নির্বাচন করুন',
+            text: 'অনুগ্রহ করে আপনার পছন্দের ভ্যারিয়েন্ট বেছে নিন।',
+            confirmButtonText: 'ঠিক আছে',
+            confirmButtonColor: '#b33e0f',
+          });
           
-          // Highlight dropdown
-          const dropdownBtn = document.getElementById('variantDropdownBtn');
-          if (dropdownBtn) {
-            dropdownBtn.style.animation = 'shake 0.4s ease';
-            dropdownBtn.style.borderColor = 'red';
-            setTimeout(() => {
-              dropdownBtn.style.animation = '';
-              dropdownBtn.style.borderColor = '#cbd5e1';
-            }, 1000);
+          // Highlight inline grid
+          const grid = document.getElementById('variantInlineGrid');
+          if (grid) {
+            grid.classList.add('variant-required-error');
+            grid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            setTimeout(() => grid.classList.remove('variant-required-error'), 2500);
           }
           
           return;
